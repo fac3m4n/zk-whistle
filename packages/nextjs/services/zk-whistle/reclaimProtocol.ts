@@ -24,7 +24,7 @@ const RECLAIM_APP_SECRET = process.env.NEXT_PUBLIC_RECLAIM_APP_SECRET || "";
 export async function initReclaimSession(providerId: string): Promise<{
   requestUrl: string;
   statusUrl: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   onSuccess: (callback: (proofs: any) => void) => void;
 }> {
   if (!RECLAIM_APP_ID || !RECLAIM_APP_SECRET) {
@@ -131,15 +131,15 @@ export function getProofSummary(proof: ReclaimProof): string {
 }
 
 /**
- * Common Reclaim provider IDs for whistleblower verification.
- * These are example providers - actual IDs should be obtained from
- * the Reclaim Protocol dashboard.
+ * Reclaim provider IDs for whistleblower verification.
+ * Provider IDs are obtained from the Reclaim Protocol dashboard.
+ * To add new providers, register them at https://dev.reclaimprotocol.org
  */
 export const RECLAIM_PROVIDERS = {
-  TWITTER_ACCOUNT: "twitter-account-ownership",
-  LINKEDIN_EMPLOYMENT: "linkedin-employment-status",
-  GITHUB_CONTRIBUTION: "github-repository-contributor",
-  GOOGLE_WORKSPACE: "google-workspace-membership",
+  TWITTER_ACCOUNT: "e6fe962d-8b4e-4ce5-abcc-3d21c88bd64a",
+  LINKEDIN_EMPLOYMENT: "a9f1063c-06b7-476a-8410-9ff6e427e637",
+  GITHUB_CONTRIBUTION: "6d3f6753-7ee6-49ee-a545-62f1b1822ae5",
+  GOOGLE_WORKSPACE: "f9f383fd-32d9-4c54-942f-5e9fda349762",
 } as const;
 
 export type ReclaimProviderKey = keyof typeof RECLAIM_PROVIDERS;
