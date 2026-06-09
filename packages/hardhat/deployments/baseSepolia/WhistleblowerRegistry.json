@@ -1,0 +1,887 @@
+{
+  "address": "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "_autoVerifyOnSubmit",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "enabled",
+          "type": "bool"
+        }
+      ],
+      "name": "AutoVerifyConfigured",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "proofHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "ProofSubmitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "subject",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "identifier",
+          "type": "bytes32"
+        }
+      ],
+      "name": "ProofVerifiedOnChain",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "verifier",
+          "type": "address"
+        }
+      ],
+      "name": "ReclaimVerifierUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "StealthMetaAddressUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "isVerified",
+          "type": "bool"
+        }
+      ],
+      "name": "VerificationUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "_status",
+          "type": "bool"
+        }
+      ],
+      "name": "attestVerification",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "autoVerifyOnSubmit",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getProofCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getProofHashes",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "",
+          "type": "bytes32[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getRegisteredUserCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getStealthMetaAddress",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getUserProfile",
+      "outputs": [
+        {
+          "internalType": "bytes32[]",
+          "name": "proofHashes",
+          "type": "bytes32[]"
+        },
+        {
+          "internalType": "bool",
+          "name": "verified",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "registeredAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "stealthMetaAddress",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "isVerified",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "proofHashExists",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "reclaimVerifier",
+      "outputs": [
+        {
+          "internalType": "contract IReclaim",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "registeredUsers",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "_enabled",
+          "type": "bool"
+        }
+      ],
+      "name": "setAutoVerifyOnSubmit",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_verifier",
+          "type": "address"
+        }
+      ],
+      "name": "setReclaimVerifier",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_stealthMetaAddress",
+          "type": "string"
+        }
+      ],
+      "name": "setStealthMetaAddress",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_proofHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "submitProofHash",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "string",
+                  "name": "provider",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "parameters",
+                  "type": "string"
+                },
+                {
+                  "internalType": "string",
+                  "name": "context",
+                  "type": "string"
+                }
+              ],
+              "internalType": "struct ReclaimTypes.ClaimInfo",
+              "name": "claimInfo",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "components": [
+                    {
+                      "internalType": "bytes32",
+                      "name": "identifier",
+                      "type": "bytes32"
+                    },
+                    {
+                      "internalType": "address",
+                      "name": "owner",
+                      "type": "address"
+                    },
+                    {
+                      "internalType": "uint32",
+                      "name": "timestampS",
+                      "type": "uint32"
+                    },
+                    {
+                      "internalType": "uint32",
+                      "name": "epoch",
+                      "type": "uint32"
+                    }
+                  ],
+                  "internalType": "struct ReclaimTypes.CompleteClaimData",
+                  "name": "claim",
+                  "type": "tuple"
+                },
+                {
+                  "internalType": "bytes[]",
+                  "name": "signatures",
+                  "type": "bytes[]"
+                }
+              ],
+              "internalType": "struct ReclaimTypes.SignedClaim",
+              "name": "signedClaim",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct ReclaimTypes.Proof",
+          "name": "proof",
+          "type": "tuple"
+        }
+      ],
+      "name": "submitVerifiedProof",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x7d4e03cb8f4f8c8a3bab444fececa483285cc019d30b2d57d5ed1f19abacf1c4",
+  "receipt": {
+    "to": null,
+    "from": "0x4b7866e717f27Fa1C38313D25F647aE0598571BD",
+    "contractAddress": "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+    "transactionIndex": 17,
+    "gasUsed": "1203863",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000800000000000008000000000001000000000008000000000000000000000000000000000000000000000000000000000000000000001000001000000000000000000000000000000000000020000000000000000000800000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000100000000000001000000000000000000000000000000000000000",
+    "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "transactionHash": "0x7d4e03cb8f4f8c8a3bab444fececa483285cc019d30b2d57d5ed1f19abacf1c4",
+    "logs": [
+      {
+        "transactionIndex": 17,
+        "blockNumber": 42625047,
+        "transactionHash": "0x7d4e03cb8f4f8c8a3bab444fececa483285cc019d30b2d57d5ed1f19abacf1c4",
+        "address": "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+        "topics": [
+          "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0",
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "0x0000000000000000000000004b7866e717f27fa1c38313d25f647ae0598571bd"
+        ],
+        "data": "0x",
+        "logIndex": 220,
+        "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "transactionIndex": 17,
+        "blockNumber": 42625047,
+        "transactionHash": "0x7d4e03cb8f4f8c8a3bab444fececa483285cc019d30b2d57d5ed1f19abacf1c4",
+        "address": "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+        "topics": [
+          "0x0a218c0b5d11626638b24b336fafec4887516a541a6777fc3a1e6ca447e0f7f4"
+        ],
+        "data": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "logIndex": 221,
+        "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "blockNumber": 42625047,
+    "cumulativeGasUsed": "7023653",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    false
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "b8016331b9eea9efebe43f7558ac27d1",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"_autoVerifyOnSubmit\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"OwnableInvalidOwner\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"OwnableUnauthorizedAccount\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"enabled\",\"type\":\"bool\"}],\"name\":\"AutoVerifyConfigured\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"proofHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"ProofSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"subject\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"identifier\",\"type\":\"bytes32\"}],\"name\":\"ProofVerifiedOnChain\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"verifier\",\"type\":\"address\"}],\"name\":\"ReclaimVerifierUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"StealthMetaAddressUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isVerified\",\"type\":\"bool\"}],\"name\":\"VerificationUpdated\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"_status\",\"type\":\"bool\"}],\"name\":\"attestVerification\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"autoVerifyOnSubmit\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getProofCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getProofHashes\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"\",\"type\":\"bytes32[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getRegisteredUserCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getStealthMetaAddress\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getUserProfile\",\"outputs\":[{\"internalType\":\"bytes32[]\",\"name\":\"proofHashes\",\"type\":\"bytes32[]\"},{\"internalType\":\"bool\",\"name\":\"verified\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"registeredAt\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"stealthMetaAddress\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"isVerified\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"proofHashExists\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"reclaimVerifier\",\"outputs\":[{\"internalType\":\"contract IReclaim\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"registeredUsers\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bool\",\"name\":\"_enabled\",\"type\":\"bool\"}],\"name\":\"setAutoVerifyOnSubmit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_verifier\",\"type\":\"address\"}],\"name\":\"setReclaimVerifier\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_stealthMetaAddress\",\"type\":\"string\"}],\"name\":\"setStealthMetaAddress\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"_proofHash\",\"type\":\"bytes32\"}],\"name\":\"submitProofHash\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"provider\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"parameters\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"context\",\"type\":\"string\"}],\"internalType\":\"struct ReclaimTypes.ClaimInfo\",\"name\":\"claimInfo\",\"type\":\"tuple\"},{\"components\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"identifier\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"uint32\",\"name\":\"timestampS\",\"type\":\"uint32\"},{\"internalType\":\"uint32\",\"name\":\"epoch\",\"type\":\"uint32\"}],\"internalType\":\"struct ReclaimTypes.CompleteClaimData\",\"name\":\"claim\",\"type\":\"tuple\"},{\"internalType\":\"bytes[]\",\"name\":\"signatures\",\"type\":\"bytes[]\"}],\"internalType\":\"struct ReclaimTypes.SignedClaim\",\"name\":\"signedClaim\",\"type\":\"tuple\"}],\"internalType\":\"struct ReclaimTypes.Proof\",\"name\":\"proof\",\"type\":\"tuple\"}],\"name\":\"submitVerifiedProof\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"Only proof hashes (bytes32) are stored on-chain. The full Reclaim JSON proof lives off-chain (IPFS/Arweave) and is verified off-chain. Trust model for `isVerified`, strongest to weakest:   1. On-chain verified (trustless): {submitVerifiedProof} passes the full      Reclaim proof to a deployed Reclaim verifier ({reclaimVerifier}) which      checks the witness signatures on-chain. Verification accrues to the      proof's `owner` (the address the proof was issued to), so a valid proof      cannot be replayed to verify a different account. This is the production      path and gives `isVerified` cryptographic meaning with no trusted party.   2. Attested mode: an authorized verifier (the contract owner, representing an      off-chain validator or a Lit Action) calls {attestVerification}. Useful      where a verifier isn't deployed for the chain/provider.   3. Trust-on-submit mode (dev/demo only): when {autoVerifyOnSubmit} is      enabled, {submitProofHash} marks the caller verified on first hash. NOT a      cryptographic guarantee \\u2014 disable in production.\",\"errors\":{\"OwnableInvalidOwner(address)\":[{\"details\":\"The owner is not a valid owner account. (eg. `address(0)`)\"}],\"OwnableUnauthorizedAccount(address)\":[{\"details\":\"The caller account is not authorized to perform an operation.\"}]},\"kind\":\"dev\",\"methods\":{\"attestVerification(address,bool)\":{\"details\":\"Restricted to the owner/verifier. This is the production path that gives `isVerified` real meaning, independent of {autoVerifyOnSubmit}.\",\"params\":{\"_status\":\"True to mark verified, false to revoke.\",\"_user\":\"The whistleblower whose status is being attested.\"}},\"constructor\":{\"params\":{\"_autoVerifyOnSubmit\":\"Enable trust-on-submit verification (dev/demo). Set        false in production and use {attestVerification} instead.\"}},\"getProofCount(address)\":{\"params\":{\"_user\":\"Address of the whistleblower.\"}},\"getProofHashes(address)\":{\"params\":{\"_user\":\"Address of the whistleblower.\"}},\"getStealthMetaAddress(address)\":{\"params\":{\"_user\":\"Address of the whistleblower.\"}},\"getUserProfile(address)\":{\"params\":{\"_user\":\"Address of the whistleblower.\"}},\"isVerified(address)\":{\"params\":{\"_user\":\"Address of the whistleblower.\"}},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner.\"},\"setAutoVerifyOnSubmit(bool)\":{\"params\":{\"_enabled\":\"New value for {autoVerifyOnSubmit}.\"}},\"setReclaimVerifier(address)\":{\"details\":\"Owner-only. Set to a valid verifier on chains/providers Reclaim supports; leave as the zero address to disable the on-chain verification path.\",\"params\":{\"_verifier\":\"Address of the Reclaim verifier contract (or address(0)).\"}},\"setStealthMetaAddress(string)\":{\"params\":{\"_stealthMetaAddress\":\"The stealth meta-address string.\"}},\"submitProofHash(bytes32)\":{\"params\":{\"_proofHash\":\"keccak256 hash of the serialized Reclaim proof JSON.\"}},\"submitVerifiedProof(((string,string,string),((bytes32,address,uint32,uint32),bytes[])))\":{\"params\":{\"proof\":\"The Reclaim proof, as produced by the JS SDK's `transformForOnchain`.\"}},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"}},\"title\":\"WhistleblowerRegistry\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"attestVerification(address,bool)\":{\"notice\":\"Authoritatively set a user's verified status after their proof has been validated off-chain (or by a Lit Action acting as the verifier).\"},\"autoVerifyOnSubmit()\":{\"notice\":\"When true, the first recorded proof hash trust-marks the user as verified without an explicit attestation. Convenience for dev/demo only.\"},\"getProofCount(address)\":{\"notice\":\"Get the number of proofs submitted by a user (reputation score proxy).\"},\"getProofHashes(address)\":{\"notice\":\"Get all proof hashes submitted by a user.\"},\"getRegisteredUserCount()\":{\"notice\":\"Get the total number of registered users.\"},\"getStealthMetaAddress(address)\":{\"notice\":\"Get the user's stealth meta-address.\"},\"getUserProfile(address)\":{\"notice\":\"Get the full user profile.\"},\"isVerified(address)\":{\"notice\":\"Check if a user has verified status (at least one proof submitted).\"},\"proofHashExists(bytes32)\":{\"notice\":\"Prevent duplicate proof submission\"},\"reclaimVerifier()\":{\"notice\":\"Deployed Reclaim verifier used by {submitVerifiedProof}. When the zero address, on-chain proof verification is disabled (fall back to attestation / trust-on-submit).\"},\"registeredUsers(uint256)\":{\"notice\":\"Track all registered users for enumeration\"},\"setAutoVerifyOnSubmit(bool)\":{\"notice\":\"Toggle trust-on-submit verification. Should be disabled in production.\"},\"setReclaimVerifier(address)\":{\"notice\":\"Set (or clear) the deployed Reclaim verifier address.\"},\"setStealthMetaAddress(string)\":{\"notice\":\"Set or update the user's ERC-5564 stealth meta-address for anonymous payments.\"},\"submitProofHash(bytes32)\":{\"notice\":\"Submit a hash of a Reclaim zkTLS proof to build on-chain reputation. The full proof JSON is stored off-chain; only its keccak256 hash is recorded here.\"},\"submitVerifiedProof(((string,string,string),((bytes32,address,uint32,uint32),bytes[])))\":{\"notice\":\"Submit a full Reclaim proof for trustless, on-chain verification. The proof's witness signatures are checked by the deployed Reclaim verifier; if they pass, the proof's `owner` is marked verified and the claim identifier is recorded. Verification accrues to `proof.signedClaim.claim.owner` (not the caller) so a valid proof cannot be replayed to verify a different account, and so it can be relayed (e.g. via a gasless sponsor) on the owner's behalf.\"}},\"notice\":\"Stores hashes of Reclaim Protocol zkTLS proofs on-chain to establish whistleblower credibility without revealing identity. Journalists can verify that a source has cryptographic proof of employment/access by checking the proof hashes stored here against the off-chain JSON proofs.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/WhistleblowerRegistry.sol\":\"WhistleblowerRegistry\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/access/Ownable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\\n\\npragma solidity ^0.8.20;\\n\\nimport {Context} from \\\"../utils/Context.sol\\\";\\n\\n/**\\n * @dev Contract module which provides a basic access control mechanism, where\\n * there is an account (an owner) that can be granted exclusive access to\\n * specific functions.\\n *\\n * The initial owner is set to the address provided by the deployer. This can\\n * later be changed with {transferOwnership}.\\n *\\n * This module is used through inheritance. It will make available the modifier\\n * `onlyOwner`, which can be applied to your functions to restrict their use to\\n * the owner.\\n */\\nabstract contract Ownable is Context {\\n    address private _owner;\\n\\n    /**\\n     * @dev The caller account is not authorized to perform an operation.\\n     */\\n    error OwnableUnauthorizedAccount(address account);\\n\\n    /**\\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\\n     */\\n    error OwnableInvalidOwner(address owner);\\n\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\n\\n    /**\\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\\n     */\\n    constructor(address initialOwner) {\\n        if (initialOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(initialOwner);\\n    }\\n\\n    /**\\n     * @dev Throws if called by any account other than the owner.\\n     */\\n    modifier onlyOwner() {\\n        _checkOwner();\\n        _;\\n    }\\n\\n    /**\\n     * @dev Returns the address of the current owner.\\n     */\\n    function owner() public view virtual returns (address) {\\n        return _owner;\\n    }\\n\\n    /**\\n     * @dev Throws if the sender is not the owner.\\n     */\\n    function _checkOwner() internal view virtual {\\n        if (owner() != _msgSender()) {\\n            revert OwnableUnauthorizedAccount(_msgSender());\\n        }\\n    }\\n\\n    /**\\n     * @dev Leaves the contract without owner. It will not be possible to call\\n     * `onlyOwner` functions. Can only be called by the current owner.\\n     *\\n     * NOTE: Renouncing ownership will leave the contract without an owner,\\n     * thereby disabling any functionality that is only available to the owner.\\n     */\\n    function renounceOwnership() public virtual onlyOwner {\\n        _transferOwnership(address(0));\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Can only be called by the current owner.\\n     */\\n    function transferOwnership(address newOwner) public virtual onlyOwner {\\n        if (newOwner == address(0)) {\\n            revert OwnableInvalidOwner(address(0));\\n        }\\n        _transferOwnership(newOwner);\\n    }\\n\\n    /**\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\n     * Internal function without access restriction.\\n     */\\n    function _transferOwnership(address newOwner) internal virtual {\\n        address oldOwner = _owner;\\n        _owner = newOwner;\\n        emit OwnershipTransferred(oldOwner, newOwner);\\n    }\\n}\\n\",\"keccak256\":\"0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb\",\"license\":\"MIT\"},\"@openzeppelin/contracts/utils/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Provides information about the current execution context, including the\\n * sender of the transaction and its data. While these are generally available\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\n * manner, since when dealing with meta-transactions the account sending and\\n * paying for execution may not be the actual sender (as far as an application\\n * is concerned).\\n *\\n * This contract is only required for intermediate, library-like contracts.\\n */\\nabstract contract Context {\\n    function _msgSender() internal view virtual returns (address) {\\n        return msg.sender;\\n    }\\n\\n    function _msgData() internal view virtual returns (bytes calldata) {\\n        return msg.data;\\n    }\\n\\n    function _contextSuffixLength() internal view virtual returns (uint256) {\\n        return 0;\\n    }\\n}\\n\",\"keccak256\":\"0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2\",\"license\":\"MIT\"},\"contracts/IReclaim.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0 <0.9.0;\\n\\n/**\\n * @title Reclaim Protocol on-chain types & verifier interface\\n * @notice Mirrors the structs of `@reclaimprotocol/verifier-solidity-sdk`\\n * (Claims.sol / Reclaim.sol) so this project can call a deployed Reclaim\\n * verifier without vendoring its full source. The field ORDER is what matters\\n * for ABI encoding and must match the canonical SDK exactly. The JS SDK's\\n * `transformForOnchain(proof)` produces objects in this exact shape.\\n * @dev We delegate cryptographic verification to Reclaim's audited verifier\\n * rather than re-implementing witness-signature checks here.\\n */\\nlibrary ReclaimTypes {\\n    struct ClaimInfo {\\n        string provider;\\n        string parameters;\\n        string context;\\n    }\\n\\n    struct CompleteClaimData {\\n        bytes32 identifier;\\n        address owner;\\n        uint32 timestampS;\\n        uint32 epoch;\\n    }\\n\\n    struct SignedClaim {\\n        CompleteClaimData claim;\\n        bytes[] signatures;\\n    }\\n\\n    struct Proof {\\n        ClaimInfo claimInfo;\\n        SignedClaim signedClaim;\\n    }\\n}\\n\\n/**\\n * @notice Minimal interface for the deployed Reclaim verifier contract.\\n * @dev Declared non-view so callers issue a regular CALL; the real\\n * implementation is `view` and reverts when a proof's witness signatures are\\n * invalid or below threshold.\\n */\\ninterface IReclaim {\\n    function verifyProof(ReclaimTypes.Proof memory proof) external;\\n}\\n\",\"keccak256\":\"0xf5174371c23309a70373620372f8fe49e71d6e720295ef2b562f2165d058ba5e\",\"license\":\"MIT\"},\"contracts/WhistleblowerRegistry.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0 <0.9.0;\\n\\nimport { Ownable } from \\\"@openzeppelin/contracts/access/Ownable.sol\\\";\\nimport { IReclaim, ReclaimTypes } from \\\"./IReclaim.sol\\\";\\n\\n/**\\n * @title WhistleblowerRegistry\\n * @notice Stores hashes of Reclaim Protocol zkTLS proofs on-chain to establish\\n * whistleblower credibility without revealing identity. Journalists can\\n * verify that a source has cryptographic proof of employment/access\\n * by checking the proof hashes stored here against the off-chain JSON proofs.\\n * @dev Only proof hashes (bytes32) are stored on-chain. The full Reclaim JSON\\n * proof lives off-chain (IPFS/Arweave) and is verified off-chain.\\n *\\n * Trust model for `isVerified`, strongest to weakest:\\n *   1. On-chain verified (trustless): {submitVerifiedProof} passes the full\\n *      Reclaim proof to a deployed Reclaim verifier ({reclaimVerifier}) which\\n *      checks the witness signatures on-chain. Verification accrues to the\\n *      proof's `owner` (the address the proof was issued to), so a valid proof\\n *      cannot be replayed to verify a different account. This is the production\\n *      path and gives `isVerified` cryptographic meaning with no trusted party.\\n *   2. Attested mode: an authorized verifier (the contract owner, representing an\\n *      off-chain validator or a Lit Action) calls {attestVerification}. Useful\\n *      where a verifier isn't deployed for the chain/provider.\\n *   3. Trust-on-submit mode (dev/demo only): when {autoVerifyOnSubmit} is\\n *      enabled, {submitProofHash} marks the caller verified on first hash. NOT a\\n *      cryptographic guarantee \\u2014 disable in production.\\n */\\ncontract WhistleblowerRegistry is Ownable {\\n    // -------------------------------------------------------\\n    // Types\\n    // -------------------------------------------------------\\n\\n    struct UserProfile {\\n        bytes32[] proofHashes;\\n        bool isVerified;\\n        uint256 registeredAt;\\n        string stealthMetaAddress; // ERC-5564 stealth meta-address for anonymous payments\\n    }\\n\\n    // -------------------------------------------------------\\n    // State\\n    // -------------------------------------------------------\\n\\n    mapping(address => UserProfile) private profiles;\\n\\n    /// @notice Track all registered users for enumeration\\n    address[] public registeredUsers;\\n    mapping(address => bool) private hasRegistered;\\n\\n    /// @notice Prevent duplicate proof submission\\n    mapping(bytes32 => bool) public proofHashExists;\\n\\n    /// @notice When true, the first recorded proof hash trust-marks the user as\\n    /// verified without an explicit attestation. Convenience for dev/demo only.\\n    bool public autoVerifyOnSubmit;\\n\\n    /// @notice Deployed Reclaim verifier used by {submitVerifiedProof}. When the\\n    /// zero address, on-chain proof verification is disabled (fall back to\\n    /// attestation / trust-on-submit).\\n    IReclaim public reclaimVerifier;\\n\\n    // -------------------------------------------------------\\n    // Events\\n    // -------------------------------------------------------\\n\\n    event ProofSubmitted(address indexed user, bytes32 indexed proofHash, uint256 timestamp);\\n\\n    event VerificationUpdated(address indexed user, bool isVerified);\\n\\n    event StealthMetaAddressUpdated(address indexed user);\\n\\n    event AutoVerifyConfigured(bool enabled);\\n\\n    event ReclaimVerifierUpdated(address indexed verifier);\\n\\n    event ProofVerifiedOnChain(address indexed subject, bytes32 indexed identifier);\\n\\n    // -------------------------------------------------------\\n    // Constructor\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @param _autoVerifyOnSubmit Enable trust-on-submit verification (dev/demo). Set\\n     *        false in production and use {attestVerification} instead.\\n     */\\n    constructor(bool _autoVerifyOnSubmit) Ownable(msg.sender) {\\n        autoVerifyOnSubmit = _autoVerifyOnSubmit;\\n        emit AutoVerifyConfigured(_autoVerifyOnSubmit);\\n    }\\n\\n    // -------------------------------------------------------\\n    // Write Functions\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Submit a hash of a Reclaim zkTLS proof to build on-chain reputation.\\n     * The full proof JSON is stored off-chain; only its keccak256 hash is recorded here.\\n     * @param _proofHash keccak256 hash of the serialized Reclaim proof JSON.\\n     */\\n    function submitProofHash(bytes32 _proofHash) external {\\n        require(_proofHash != bytes32(0), \\\"Invalid proof hash\\\");\\n        require(!proofHashExists[_proofHash], \\\"Proof already submitted\\\");\\n\\n        _ensureRegistered(msg.sender);\\n\\n        profiles[msg.sender].proofHashes.push(_proofHash);\\n        proofHashExists[_proofHash] = true;\\n\\n        // Trust-on-submit verification (dev/demo only \\u2014 see contract-level docs).\\n        if (autoVerifyOnSubmit && !profiles[msg.sender].isVerified) {\\n            profiles[msg.sender].isVerified = true;\\n            emit VerificationUpdated(msg.sender, true);\\n        }\\n\\n        emit ProofSubmitted(msg.sender, _proofHash, block.timestamp);\\n    }\\n\\n    /**\\n     * @notice Submit a full Reclaim proof for trustless, on-chain verification.\\n     * The proof's witness signatures are checked by the deployed Reclaim verifier;\\n     * if they pass, the proof's `owner` is marked verified and the claim identifier\\n     * is recorded. Verification accrues to `proof.signedClaim.claim.owner` (not the\\n     * caller) so a valid proof cannot be replayed to verify a different account, and\\n     * so it can be relayed (e.g. via a gasless sponsor) on the owner's behalf.\\n     * @param proof The Reclaim proof, as produced by the JS SDK's `transformForOnchain`.\\n     */\\n    function submitVerifiedProof(ReclaimTypes.Proof calldata proof) external {\\n        require(address(reclaimVerifier) != address(0), \\\"Verifier not configured\\\");\\n\\n        bytes32 identifier = proof.signedClaim.claim.identifier;\\n        address subject = proof.signedClaim.claim.owner;\\n        require(identifier != bytes32(0), \\\"Invalid proof identifier\\\");\\n        require(subject != address(0), \\\"Invalid proof owner\\\");\\n        require(!proofHashExists[identifier], \\\"Proof already submitted\\\");\\n\\n        // Reverts if the witness signatures are invalid or below threshold.\\n        reclaimVerifier.verifyProof(proof);\\n\\n        _ensureRegistered(subject);\\n\\n        profiles[subject].proofHashes.push(identifier);\\n        proofHashExists[identifier] = true;\\n\\n        // Cryptographically backed: independent of autoVerifyOnSubmit.\\n        if (!profiles[subject].isVerified) {\\n            profiles[subject].isVerified = true;\\n            emit VerificationUpdated(subject, true);\\n        }\\n\\n        emit ProofSubmitted(subject, identifier, block.timestamp);\\n        emit ProofVerifiedOnChain(subject, identifier);\\n    }\\n\\n    /**\\n     * @notice Set (or clear) the deployed Reclaim verifier address.\\n     * @dev Owner-only. Set to a valid verifier on chains/providers Reclaim supports;\\n     * leave as the zero address to disable the on-chain verification path.\\n     * @param _verifier Address of the Reclaim verifier contract (or address(0)).\\n     */\\n    function setReclaimVerifier(address _verifier) external onlyOwner {\\n        reclaimVerifier = IReclaim(_verifier);\\n        emit ReclaimVerifierUpdated(_verifier);\\n    }\\n\\n    /**\\n     * @notice Authoritatively set a user's verified status after their proof has\\n     * been validated off-chain (or by a Lit Action acting as the verifier).\\n     * @dev Restricted to the owner/verifier. This is the production path that gives\\n     * `isVerified` real meaning, independent of {autoVerifyOnSubmit}.\\n     * @param _user The whistleblower whose status is being attested.\\n     * @param _status True to mark verified, false to revoke.\\n     */\\n    function attestVerification(address _user, bool _status) external onlyOwner {\\n        require(hasRegistered[_user], \\\"User not registered\\\");\\n        if (profiles[_user].isVerified != _status) {\\n            profiles[_user].isVerified = _status;\\n            emit VerificationUpdated(_user, _status);\\n        }\\n    }\\n\\n    /**\\n     * @notice Toggle trust-on-submit verification. Should be disabled in production.\\n     * @param _enabled New value for {autoVerifyOnSubmit}.\\n     */\\n    function setAutoVerifyOnSubmit(bool _enabled) external onlyOwner {\\n        autoVerifyOnSubmit = _enabled;\\n        emit AutoVerifyConfigured(_enabled);\\n    }\\n\\n    /**\\n     * @notice Set or update the user's ERC-5564 stealth meta-address for anonymous payments.\\n     * @param _stealthMetaAddress The stealth meta-address string.\\n     */\\n    function setStealthMetaAddress(string calldata _stealthMetaAddress) external {\\n        require(bytes(_stealthMetaAddress).length > 0, \\\"Empty meta-address\\\");\\n\\n        _ensureRegistered(msg.sender);\\n\\n        profiles[msg.sender].stealthMetaAddress = _stealthMetaAddress;\\n        emit StealthMetaAddressUpdated(msg.sender);\\n    }\\n\\n    /**\\n     * @dev Register a user on first interaction so enumeration and timestamps are tracked.\\n     */\\n    function _ensureRegistered(address _user) private {\\n        if (!hasRegistered[_user]) {\\n            registeredUsers.push(_user);\\n            hasRegistered[_user] = true;\\n            profiles[_user].registeredAt = block.timestamp;\\n        }\\n    }\\n\\n    // -------------------------------------------------------\\n    // Read Functions\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Get all proof hashes submitted by a user.\\n     * @param _user Address of the whistleblower.\\n     */\\n    function getProofHashes(address _user) external view returns (bytes32[] memory) {\\n        return profiles[_user].proofHashes;\\n    }\\n\\n    /**\\n     * @notice Check if a user has verified status (at least one proof submitted).\\n     * @param _user Address of the whistleblower.\\n     */\\n    function isVerified(address _user) external view returns (bool) {\\n        return profiles[_user].isVerified;\\n    }\\n\\n    /**\\n     * @notice Get the number of proofs submitted by a user (reputation score proxy).\\n     * @param _user Address of the whistleblower.\\n     */\\n    function getProofCount(address _user) external view returns (uint256) {\\n        return profiles[_user].proofHashes.length;\\n    }\\n\\n    /**\\n     * @notice Get the user's stealth meta-address.\\n     * @param _user Address of the whistleblower.\\n     */\\n    function getStealthMetaAddress(address _user) external view returns (string memory) {\\n        return profiles[_user].stealthMetaAddress;\\n    }\\n\\n    /**\\n     * @notice Get the full user profile.\\n     * @param _user Address of the whistleblower.\\n     */\\n    function getUserProfile(\\n        address _user\\n    )\\n        external\\n        view\\n        returns (bytes32[] memory proofHashes, bool verified, uint256 registeredAt, string memory stealthMetaAddress)\\n    {\\n        UserProfile storage p = profiles[_user];\\n        return (p.proofHashes, p.isVerified, p.registeredAt, p.stealthMetaAddress);\\n    }\\n\\n    /**\\n     * @notice Get the total number of registered users.\\n     */\\n    function getRegisteredUserCount() external view returns (uint256) {\\n        return registeredUsers.length;\\n    }\\n}\\n\",\"keccak256\":\"0xd40e126c93584acd75d8147162cb780eb401d0769915057ba15013617055897d\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161156e38038061156e83398101604081905261002f916100f9565b338061005557604051631e4fbdf760e01b81526000600482015260240160405180910390fd5b61005e816100a9565b506005805460ff19168215159081179091556040519081527f0a218c0b5d11626638b24b336fafec4887516a541a6777fc3a1e6ca447e0f7f49060200160405180910390a150610122565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b60006020828403121561010b57600080fd5b8151801515811461011b57600080fd5b9392505050565b61143d806101316000396000f3fe608060405234801561001057600080fd5b50600436106101215760003560e01c8063987ee156116100ad578063c5cfe8b611610071578063c5cfe8b6146102bb578063c79e72c5146102ce578063e041d533146102db578063f2fde38b146102ee578063fa1466891461030157600080fd5b8063987ee1561461021257806398971edb14610235578063a09f2a3314610255578063abe4436514610268578063b9209e331461027b57600080fd5b80636cd97e74116100f45780636cd97e74146101cb578063708bfaff146101d3578063715018a6146101e65780637259e0f8146101ee5780638da5cb5b1461020157600080fd5b806305dd3ee41461012657806309cee2cd1461014f57806316829b92146101645780636b9a4ae314610194575b600080fd5b610139610134366004610de3565b610324565b6040516101469190610e41565b60405180910390f35b61016261015d366004610e54565b610390565b005b60055461017c9061010090046001600160a01b031681565b6040516001600160a01b039091168152602001610146565b6101bd6101a2366004610de3565b6001600160a01b031660009081526001602052604090205490565b604051908152602001610146565b6002546101bd565b6101626101e1366004610e8f565b6106af565b610162610840565b61017c6101fc366004610e8f565b610854565b6000546001600160a01b031661017c565b610225610220366004610de3565b61087e565b6040516101469493929190610eee565b610248610243366004610de3565b6109a2565b6040516101469190610f2c565b610162610263366004610de3565b610a47565b610162610276366004610f3f565b610aa1565b6102ab610289366004610de3565b6001600160a01b03166000908152600160208190526040909120015460ff1690565b6040519015158152602001610146565b6101626102c9366004610fc3565b610b39565b6005546102ab9060ff1681565b6101626102e9366004610fde565b610b88565b6101626102fc366004610de3565b610c7a565b6102ab61030f366004610e8f565b60046020526000908152604090205460ff1681565b6001600160a01b03811660009081526001602090815260409182902080548351818402810184019094528084526060939283018282801561038457602002820191906000526020600020905b815481526020019060010190808311610370575b50505050509050919050565b60055461010090046001600160a01b03166103f25760405162461bcd60e51b815260206004820152601760248201527f5665726966696572206e6f7420636f6e6669677572656400000000000000000060448201526064015b60405180910390fd5b60006104016020830183611011565b35905060006104136020840184611011565b610424906040810190602001610de3565b9050816104735760405162461bcd60e51b815260206004820152601860248201527f496e76616c69642070726f6f66206964656e746966696572000000000000000060448201526064016103e9565b6001600160a01b0381166104bf5760405162461bcd60e51b815260206004820152601360248201527224b73b30b634b210383937b7b31037bbb732b960691b60448201526064016103e9565b60008281526004602052604090205460ff16156105185760405162461bcd60e51b8152602060048201526017602482015276141c9bdbd988185b1c9958591e481cdd589b5a5d1d1959604a1b60448201526064016103e9565b6005546040516354b0734f60e11b81526101009091046001600160a01b03169063a960e69e9061054c9086906004016111ef565b600060405180830381600087803b15801561056657600080fd5b505af115801561057a573d6000803e3d6000fd5b5050505061058781610cb8565b6001600160a01b0381166000818152600160208181526040808420805480850182558186528386200188905587855260048352908420805460ff1916841790559390925290819052015460ff16610630576001600160a01b0381166000818152600160208181526040928390208201805460ff19168317905591519081527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b81816001600160a01b03167f85d8a769bd67a009e99d446496b3f5cc497ec44fd4dfcffdea841f8ef035b54a4260405161066c91815260200190565b60405180910390a360405182906001600160a01b038316907f3057b1bbbf73cb5399226d1c9ddb05095f40bd258e7d9faed8cb21b487483be890600090a3505050565b806106f15760405162461bcd60e51b8152602060048201526012602482015271092dcecc2d8d2c840e0e4dedecc40d0c2e6d60731b60448201526064016103e9565b60008181526004602052604090205460ff161561074a5760405162461bcd60e51b8152602060048201526017602482015276141c9bdbd988185b1c9958591e481cdd589b5a5d1d1959604a1b60448201526064016103e9565b61075333610cb8565b33600090815260016020818152604080842080548085018255908552828520018590558484526004909152909120805460ff1916909117905560055460ff1680156107b25750336000908152600160208190526040909120015460ff16155b1561080657336000818152600160208181526040928390208201805460ff19168317905591519081527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b604051428152819033907f85d8a769bd67a009e99d446496b3f5cc497ec44fd4dfcffdea841f8ef035b54a9060200160405180910390a350565b610848610d4a565b6108526000610d77565b565b6002818154811061086457600080fd5b6000918252602090912001546001600160a01b0316905081565b6001600160a01b0381166000908152600160208181526040808420928301546002840154845483518186028101860190945280845260609695869588959194859460ff9091169390926003860192909186918301828280156108ff57602002820191906000526020600020905b8154815260200190600101908083116108eb575b50505050509350808054610912906112a8565b80601f016020809104026020016040519081016040528092919081815260200182805461093e906112a8565b801561098b5780601f106109605761010080835404028352916020019161098b565b820191906000526020600020905b81548152906001019060200180831161096e57829003601f168201915b505050505090509450945094509450509193509193565b6001600160a01b03811660009081526001602052604090206003018054606091906109cc906112a8565b80601f01602080910402602001604051908101604052809291908181526020018280546109f8906112a8565b80156103845780601f10610a1a57610100808354040283529160200191610384565b820191906000526020600020905b815481529060010190602001808311610a285750939695505050505050565b610a4f610d4a565b60058054610100600160a81b0319166101006001600160a01b038416908102919091179091556040517f76ae86a7b5214e09876fd0370a96ac2745a5b6eb8b79a31d87e17fac33b5c2e190600090a250565b80610ae35760405162461bcd60e51b8152602060048201526012602482015271456d707479206d6574612d6164647265737360701b60448201526064016103e9565b610aec33610cb8565b336000908152600160205260409020600301610b09828483611347565b5060405133907f6962da22c4edb0abdedd26b6fe14ff780202b008bfc415498813512204c7647a90600090a25050565b610b41610d4a565b6005805460ff19168215159081179091556040519081527f0a218c0b5d11626638b24b336fafec4887516a541a6777fc3a1e6ca447e0f7f49060200160405180910390a150565b610b90610d4a565b6001600160a01b03821660009081526003602052604090205460ff16610bee5760405162461bcd60e51b8152602060048201526013602482015272155cd95c881b9bdd081c9959da5cdd195c9959606a1b60448201526064016103e9565b6001600160a01b0382166000908152600160208190526040909120015460ff16151581151514610c76576001600160a01b038216600081815260016020818152604092839020909101805460ff191685151590811790915591519182527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b5050565b610c82610d4a565b6001600160a01b038116610cac57604051631e4fbdf760e01b8152600060048201526024016103e9565b610cb581610d77565b50565b6001600160a01b03811660009081526003602052604090205460ff16610cb55760028054600181810183557f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace90910180546001600160a01b0385166001600160a01b031990911681179091556000908152600360209081526040808320805460ff191685179055929052204291015550565b6000546001600160a01b031633146108525760405163118cdaa760e01b81523360048201526024016103e9565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b80356001600160a01b0381168114610dde57600080fd5b919050565b600060208284031215610df557600080fd5b610dfe82610dc7565b9392505050565b600081518084526020840193506020830160005b82811015610e37578151865260209586019590910190600101610e19565b5093949350505050565b602081526000610dfe6020830184610e05565b600060208284031215610e6657600080fd5b813567ffffffffffffffff811115610e7d57600080fd5b820160408185031215610dfe57600080fd5b600060208284031215610ea157600080fd5b5035919050565b6000815180845260005b81811015610ece57602081850181015186830182015201610eb2565b506000602082860101526020601f19601f83011685010191505092915050565b608081526000610f016080830187610e05565b85151560208401528460408401528281036060840152610f218185610ea8565b979650505050505050565b602081526000610dfe6020830184610ea8565b60008060208385031215610f5257600080fd5b823567ffffffffffffffff811115610f6957600080fd5b8301601f81018513610f7a57600080fd5b803567ffffffffffffffff811115610f9157600080fd5b856020828401011115610fa357600080fd5b6020919091019590945092505050565b80358015158114610dde57600080fd5b600060208284031215610fd557600080fd5b610dfe82610fb3565b60008060408385031215610ff157600080fd5b610ffa83610dc7565b915061100860208401610fb3565b90509250929050565b60008235609e1983360301811261102757600080fd5b9190910192915050565b6000808335601e1984360301811261104857600080fd5b830160208101925035905067ffffffffffffffff81111561106857600080fd5b80360382131561107757600080fd5b9250929050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b60008235609e198336030181126110bd57600080fd5b90910192915050565b803563ffffffff81168114610dde57600080fd5b60008383855260208501945060208460051b8201018360005b8681101561113157838303601f1901885261110e8287611031565b61111985828461107e565b60209a8b019a909550939093019250506001016110f3565b50909695505050505050565b8035825260006001600160a01b0361115760208401610dc7565b16602084015263ffffffff61116e604084016110c6565b16604084015263ffffffff611185606084016110c6565b1660608401526080820135601e198336030181126111a257600080fd5b820160208101903567ffffffffffffffff8111156111bf57600080fd5b8060051b36038213156111d157600080fd5b60a060808601526111e660a0860182846110da565b95945050505050565b6020815260008235605e1984360301811261120957600080fd5b60406020840152830161121c8180611031565b60608086015261123060c08601828461107e565b9150506112406020830183611031565b858303605f1901608087015261125783828461107e565b925050506112686040830183611031565b858303605f190160a0870152925061128182848361107e565b9250505061129260208501856110a7565b838203601f190160408501526111e6828261113d565b600181811c908216806112bc57607f821691505b6020821081036112dc57634e487b7160e01b600052602260045260246000fd5b50919050565b634e487b7160e01b600052604160045260246000fd5b601f82111561134257806000526020600020601f840160051c8101602085101561131f5750805b601f840160051c820191505b8181101561133f576000815560010161132b565b50505b505050565b67ffffffffffffffff83111561135f5761135f6112e2565b6113738361136d83546112a8565b836112f8565b6000601f8411600181146113a7576000851561138f5750838201355b600019600387901b1c1916600186901b17835561133f565b600083815260209020601f19861690835b828110156113d857868501358255602094850194600190920191016113b8565b50868210156113f55760001960f88860031b161c19848701351681555b505060018560011b018355505050505056fea26469706673582212204bff83a9a312dd43a12e69a4cc5783c48f19b68953f0afbbe09c82d53516951f64736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106101215760003560e01c8063987ee156116100ad578063c5cfe8b611610071578063c5cfe8b6146102bb578063c79e72c5146102ce578063e041d533146102db578063f2fde38b146102ee578063fa1466891461030157600080fd5b8063987ee1561461021257806398971edb14610235578063a09f2a3314610255578063abe4436514610268578063b9209e331461027b57600080fd5b80636cd97e74116100f45780636cd97e74146101cb578063708bfaff146101d3578063715018a6146101e65780637259e0f8146101ee5780638da5cb5b1461020157600080fd5b806305dd3ee41461012657806309cee2cd1461014f57806316829b92146101645780636b9a4ae314610194575b600080fd5b610139610134366004610de3565b610324565b6040516101469190610e41565b60405180910390f35b61016261015d366004610e54565b610390565b005b60055461017c9061010090046001600160a01b031681565b6040516001600160a01b039091168152602001610146565b6101bd6101a2366004610de3565b6001600160a01b031660009081526001602052604090205490565b604051908152602001610146565b6002546101bd565b6101626101e1366004610e8f565b6106af565b610162610840565b61017c6101fc366004610e8f565b610854565b6000546001600160a01b031661017c565b610225610220366004610de3565b61087e565b6040516101469493929190610eee565b610248610243366004610de3565b6109a2565b6040516101469190610f2c565b610162610263366004610de3565b610a47565b610162610276366004610f3f565b610aa1565b6102ab610289366004610de3565b6001600160a01b03166000908152600160208190526040909120015460ff1690565b6040519015158152602001610146565b6101626102c9366004610fc3565b610b39565b6005546102ab9060ff1681565b6101626102e9366004610fde565b610b88565b6101626102fc366004610de3565b610c7a565b6102ab61030f366004610e8f565b60046020526000908152604090205460ff1681565b6001600160a01b03811660009081526001602090815260409182902080548351818402810184019094528084526060939283018282801561038457602002820191906000526020600020905b815481526020019060010190808311610370575b50505050509050919050565b60055461010090046001600160a01b03166103f25760405162461bcd60e51b815260206004820152601760248201527f5665726966696572206e6f7420636f6e6669677572656400000000000000000060448201526064015b60405180910390fd5b60006104016020830183611011565b35905060006104136020840184611011565b610424906040810190602001610de3565b9050816104735760405162461bcd60e51b815260206004820152601860248201527f496e76616c69642070726f6f66206964656e746966696572000000000000000060448201526064016103e9565b6001600160a01b0381166104bf5760405162461bcd60e51b815260206004820152601360248201527224b73b30b634b210383937b7b31037bbb732b960691b60448201526064016103e9565b60008281526004602052604090205460ff16156105185760405162461bcd60e51b8152602060048201526017602482015276141c9bdbd988185b1c9958591e481cdd589b5a5d1d1959604a1b60448201526064016103e9565b6005546040516354b0734f60e11b81526101009091046001600160a01b03169063a960e69e9061054c9086906004016111ef565b600060405180830381600087803b15801561056657600080fd5b505af115801561057a573d6000803e3d6000fd5b5050505061058781610cb8565b6001600160a01b0381166000818152600160208181526040808420805480850182558186528386200188905587855260048352908420805460ff1916841790559390925290819052015460ff16610630576001600160a01b0381166000818152600160208181526040928390208201805460ff19168317905591519081527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b81816001600160a01b03167f85d8a769bd67a009e99d446496b3f5cc497ec44fd4dfcffdea841f8ef035b54a4260405161066c91815260200190565b60405180910390a360405182906001600160a01b038316907f3057b1bbbf73cb5399226d1c9ddb05095f40bd258e7d9faed8cb21b487483be890600090a3505050565b806106f15760405162461bcd60e51b8152602060048201526012602482015271092dcecc2d8d2c840e0e4dedecc40d0c2e6d60731b60448201526064016103e9565b60008181526004602052604090205460ff161561074a5760405162461bcd60e51b8152602060048201526017602482015276141c9bdbd988185b1c9958591e481cdd589b5a5d1d1959604a1b60448201526064016103e9565b61075333610cb8565b33600090815260016020818152604080842080548085018255908552828520018590558484526004909152909120805460ff1916909117905560055460ff1680156107b25750336000908152600160208190526040909120015460ff16155b1561080657336000818152600160208181526040928390208201805460ff19168317905591519081527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b604051428152819033907f85d8a769bd67a009e99d446496b3f5cc497ec44fd4dfcffdea841f8ef035b54a9060200160405180910390a350565b610848610d4a565b6108526000610d77565b565b6002818154811061086457600080fd5b6000918252602090912001546001600160a01b0316905081565b6001600160a01b0381166000908152600160208181526040808420928301546002840154845483518186028101860190945280845260609695869588959194859460ff9091169390926003860192909186918301828280156108ff57602002820191906000526020600020905b8154815260200190600101908083116108eb575b50505050509350808054610912906112a8565b80601f016020809104026020016040519081016040528092919081815260200182805461093e906112a8565b801561098b5780601f106109605761010080835404028352916020019161098b565b820191906000526020600020905b81548152906001019060200180831161096e57829003601f168201915b505050505090509450945094509450509193509193565b6001600160a01b03811660009081526001602052604090206003018054606091906109cc906112a8565b80601f01602080910402602001604051908101604052809291908181526020018280546109f8906112a8565b80156103845780601f10610a1a57610100808354040283529160200191610384565b820191906000526020600020905b815481529060010190602001808311610a285750939695505050505050565b610a4f610d4a565b60058054610100600160a81b0319166101006001600160a01b038416908102919091179091556040517f76ae86a7b5214e09876fd0370a96ac2745a5b6eb8b79a31d87e17fac33b5c2e190600090a250565b80610ae35760405162461bcd60e51b8152602060048201526012602482015271456d707479206d6574612d6164647265737360701b60448201526064016103e9565b610aec33610cb8565b336000908152600160205260409020600301610b09828483611347565b5060405133907f6962da22c4edb0abdedd26b6fe14ff780202b008bfc415498813512204c7647a90600090a25050565b610b41610d4a565b6005805460ff19168215159081179091556040519081527f0a218c0b5d11626638b24b336fafec4887516a541a6777fc3a1e6ca447e0f7f49060200160405180910390a150565b610b90610d4a565b6001600160a01b03821660009081526003602052604090205460ff16610bee5760405162461bcd60e51b8152602060048201526013602482015272155cd95c881b9bdd081c9959da5cdd195c9959606a1b60448201526064016103e9565b6001600160a01b0382166000908152600160208190526040909120015460ff16151581151514610c76576001600160a01b038216600081815260016020818152604092839020909101805460ff191685151590811790915591519182527e255232b9c7545c95a579e3b4ed6b224bcadd569379c69d9715d500ed93da38910160405180910390a25b5050565b610c82610d4a565b6001600160a01b038116610cac57604051631e4fbdf760e01b8152600060048201526024016103e9565b610cb581610d77565b50565b6001600160a01b03811660009081526003602052604090205460ff16610cb55760028054600181810183557f405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace90910180546001600160a01b0385166001600160a01b031990911681179091556000908152600360209081526040808320805460ff191685179055929052204291015550565b6000546001600160a01b031633146108525760405163118cdaa760e01b81523360048201526024016103e9565b600080546001600160a01b038381166001600160a01b0319831681178455604051919092169283917f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e09190a35050565b80356001600160a01b0381168114610dde57600080fd5b919050565b600060208284031215610df557600080fd5b610dfe82610dc7565b9392505050565b600081518084526020840193506020830160005b82811015610e37578151865260209586019590910190600101610e19565b5093949350505050565b602081526000610dfe6020830184610e05565b600060208284031215610e6657600080fd5b813567ffffffffffffffff811115610e7d57600080fd5b820160408185031215610dfe57600080fd5b600060208284031215610ea157600080fd5b5035919050565b6000815180845260005b81811015610ece57602081850181015186830182015201610eb2565b506000602082860101526020601f19601f83011685010191505092915050565b608081526000610f016080830187610e05565b85151560208401528460408401528281036060840152610f218185610ea8565b979650505050505050565b602081526000610dfe6020830184610ea8565b60008060208385031215610f5257600080fd5b823567ffffffffffffffff811115610f6957600080fd5b8301601f81018513610f7a57600080fd5b803567ffffffffffffffff811115610f9157600080fd5b856020828401011115610fa357600080fd5b6020919091019590945092505050565b80358015158114610dde57600080fd5b600060208284031215610fd557600080fd5b610dfe82610fb3565b60008060408385031215610ff157600080fd5b610ffa83610dc7565b915061100860208401610fb3565b90509250929050565b60008235609e1983360301811261102757600080fd5b9190910192915050565b6000808335601e1984360301811261104857600080fd5b830160208101925035905067ffffffffffffffff81111561106857600080fd5b80360382131561107757600080fd5b9250929050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b60008235609e198336030181126110bd57600080fd5b90910192915050565b803563ffffffff81168114610dde57600080fd5b60008383855260208501945060208460051b8201018360005b8681101561113157838303601f1901885261110e8287611031565b61111985828461107e565b60209a8b019a909550939093019250506001016110f3565b50909695505050505050565b8035825260006001600160a01b0361115760208401610dc7565b16602084015263ffffffff61116e604084016110c6565b16604084015263ffffffff611185606084016110c6565b1660608401526080820135601e198336030181126111a257600080fd5b820160208101903567ffffffffffffffff8111156111bf57600080fd5b8060051b36038213156111d157600080fd5b60a060808601526111e660a0860182846110da565b95945050505050565b6020815260008235605e1984360301811261120957600080fd5b60406020840152830161121c8180611031565b60608086015261123060c08601828461107e565b9150506112406020830183611031565b858303605f1901608087015261125783828461107e565b925050506112686040830183611031565b858303605f190160a0870152925061128182848361107e565b9250505061129260208501856110a7565b838203601f190160408501526111e6828261113d565b600181811c908216806112bc57607f821691505b6020821081036112dc57634e487b7160e01b600052602260045260246000fd5b50919050565b634e487b7160e01b600052604160045260246000fd5b601f82111561134257806000526020600020601f840160051c8101602085101561131f5750805b601f840160051c820191505b8181101561133f576000815560010161132b565b50505b505050565b67ffffffffffffffff83111561135f5761135f6112e2565b6113738361136d83546112a8565b836112f8565b6000601f8411600181146113a7576000851561138f5750838201355b600019600387901b1c1916600186901b17835561133f565b600083815260209020601f19861690835b828110156113d857868501358255602094850194600190920191016113b8565b50868210156113f55760001960f88860031b161c19848701351681555b505060018560011b018355505050505056fea26469706673582212204bff83a9a312dd43a12e69a4cc5783c48f19b68953f0afbbe09c82d53516951f64736f6c634300081e0033",
+  "devdoc": {
+    "details": "Only proof hashes (bytes32) are stored on-chain. The full Reclaim JSON proof lives off-chain (IPFS/Arweave) and is verified off-chain. Trust model for `isVerified`, strongest to weakest:   1. On-chain verified (trustless): {submitVerifiedProof} passes the full      Reclaim proof to a deployed Reclaim verifier ({reclaimVerifier}) which      checks the witness signatures on-chain. Verification accrues to the      proof's `owner` (the address the proof was issued to), so a valid proof      cannot be replayed to verify a different account. This is the production      path and gives `isVerified` cryptographic meaning with no trusted party.   2. Attested mode: an authorized verifier (the contract owner, representing an      off-chain validator or a Lit Action) calls {attestVerification}. Useful      where a verifier isn't deployed for the chain/provider.   3. Trust-on-submit mode (dev/demo only): when {autoVerifyOnSubmit} is      enabled, {submitProofHash} marks the caller verified on first hash. NOT a      cryptographic guarantee — disable in production.",
+    "errors": {
+      "OwnableInvalidOwner(address)": [
+        {
+          "details": "The owner is not a valid owner account. (eg. `address(0)`)"
+        }
+      ],
+      "OwnableUnauthorizedAccount(address)": [
+        {
+          "details": "The caller account is not authorized to perform an operation."
+        }
+      ]
+    },
+    "kind": "dev",
+    "methods": {
+      "attestVerification(address,bool)": {
+        "details": "Restricted to the owner/verifier. This is the production path that gives `isVerified` real meaning, independent of {autoVerifyOnSubmit}.",
+        "params": {
+          "_status": "True to mark verified, false to revoke.",
+          "_user": "The whistleblower whose status is being attested."
+        }
+      },
+      "constructor": {
+        "params": {
+          "_autoVerifyOnSubmit": "Enable trust-on-submit verification (dev/demo). Set        false in production and use {attestVerification} instead."
+        }
+      },
+      "getProofCount(address)": {
+        "params": {
+          "_user": "Address of the whistleblower."
+        }
+      },
+      "getProofHashes(address)": {
+        "params": {
+          "_user": "Address of the whistleblower."
+        }
+      },
+      "getStealthMetaAddress(address)": {
+        "params": {
+          "_user": "Address of the whistleblower."
+        }
+      },
+      "getUserProfile(address)": {
+        "params": {
+          "_user": "Address of the whistleblower."
+        }
+      },
+      "isVerified(address)": {
+        "params": {
+          "_user": "Address of the whistleblower."
+        }
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby disabling any functionality that is only available to the owner."
+      },
+      "setAutoVerifyOnSubmit(bool)": {
+        "params": {
+          "_enabled": "New value for {autoVerifyOnSubmit}."
+        }
+      },
+      "setReclaimVerifier(address)": {
+        "details": "Owner-only. Set to a valid verifier on chains/providers Reclaim supports; leave as the zero address to disable the on-chain verification path.",
+        "params": {
+          "_verifier": "Address of the Reclaim verifier contract (or address(0))."
+        }
+      },
+      "setStealthMetaAddress(string)": {
+        "params": {
+          "_stealthMetaAddress": "The stealth meta-address string."
+        }
+      },
+      "submitProofHash(bytes32)": {
+        "params": {
+          "_proofHash": "keccak256 hash of the serialized Reclaim proof JSON."
+        }
+      },
+      "submitVerifiedProof(((string,string,string),((bytes32,address,uint32,uint32),bytes[])))": {
+        "params": {
+          "proof": "The Reclaim proof, as produced by the JS SDK's `transformForOnchain`."
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      }
+    },
+    "title": "WhistleblowerRegistry",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "attestVerification(address,bool)": {
+        "notice": "Authoritatively set a user's verified status after their proof has been validated off-chain (or by a Lit Action acting as the verifier)."
+      },
+      "autoVerifyOnSubmit()": {
+        "notice": "When true, the first recorded proof hash trust-marks the user as verified without an explicit attestation. Convenience for dev/demo only."
+      },
+      "getProofCount(address)": {
+        "notice": "Get the number of proofs submitted by a user (reputation score proxy)."
+      },
+      "getProofHashes(address)": {
+        "notice": "Get all proof hashes submitted by a user."
+      },
+      "getRegisteredUserCount()": {
+        "notice": "Get the total number of registered users."
+      },
+      "getStealthMetaAddress(address)": {
+        "notice": "Get the user's stealth meta-address."
+      },
+      "getUserProfile(address)": {
+        "notice": "Get the full user profile."
+      },
+      "isVerified(address)": {
+        "notice": "Check if a user has verified status (at least one proof submitted)."
+      },
+      "proofHashExists(bytes32)": {
+        "notice": "Prevent duplicate proof submission"
+      },
+      "reclaimVerifier()": {
+        "notice": "Deployed Reclaim verifier used by {submitVerifiedProof}. When the zero address, on-chain proof verification is disabled (fall back to attestation / trust-on-submit)."
+      },
+      "registeredUsers(uint256)": {
+        "notice": "Track all registered users for enumeration"
+      },
+      "setAutoVerifyOnSubmit(bool)": {
+        "notice": "Toggle trust-on-submit verification. Should be disabled in production."
+      },
+      "setReclaimVerifier(address)": {
+        "notice": "Set (or clear) the deployed Reclaim verifier address."
+      },
+      "setStealthMetaAddress(string)": {
+        "notice": "Set or update the user's ERC-5564 stealth meta-address for anonymous payments."
+      },
+      "submitProofHash(bytes32)": {
+        "notice": "Submit a hash of a Reclaim zkTLS proof to build on-chain reputation. The full proof JSON is stored off-chain; only its keccak256 hash is recorded here."
+      },
+      "submitVerifiedProof(((string,string,string),((bytes32,address,uint32,uint32),bytes[])))": {
+        "notice": "Submit a full Reclaim proof for trustless, on-chain verification. The proof's witness signatures are checked by the deployed Reclaim verifier; if they pass, the proof's `owner` is marked verified and the claim identifier is recorded. Verification accrues to `proof.signedClaim.claim.owner` (not the caller) so a valid proof cannot be replayed to verify a different account, and so it can be relayed (e.g. via a gasless sponsor) on the owner's behalf."
+      }
+    },
+    "notice": "Stores hashes of Reclaim Protocol zkTLS proofs on-chain to establish whistleblower credibility without revealing identity. Journalists can verify that a source has cryptographic proof of employment/access by checking the proof hashes stored here against the off-chain JSON proofs.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 8,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_address"
+      },
+      {
+        "astId": 244,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "profiles",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_mapping(t_address,t_struct(UserProfile)239_storage)"
+      },
+      {
+        "astId": 248,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "registeredUsers",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_array(t_address)dyn_storage"
+      },
+      {
+        "astId": 252,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "hasRegistered",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 257,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "proofHashExists",
+        "offset": 0,
+        "slot": "4",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      },
+      {
+        "astId": 260,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "autoVerifyOnSubmit",
+        "offset": 0,
+        "slot": "5",
+        "type": "t_bool"
+      },
+      {
+        "astId": 264,
+        "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+        "label": "reclaimVerifier",
+        "offset": 1,
+        "slot": "5",
+        "type": "t_contract(IReclaim)219"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_bytes32)dyn_storage": {
+        "base": "t_bytes32",
+        "encoding": "dynamic_array",
+        "label": "bytes32[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_contract(IReclaim)219": {
+        "encoding": "inplace",
+        "label": "contract IReclaim",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_address,t_struct(UserProfile)239_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct WhistleblowerRegistry.UserProfile)",
+        "numberOfBytes": "32",
+        "value": "t_struct(UserProfile)239_storage"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(UserProfile)239_storage": {
+        "encoding": "inplace",
+        "label": "struct WhistleblowerRegistry.UserProfile",
+        "members": [
+          {
+            "astId": 232,
+            "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+            "label": "proofHashes",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_array(t_bytes32)dyn_storage"
+          },
+          {
+            "astId": 234,
+            "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+            "label": "isVerified",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_bool"
+          },
+          {
+            "astId": 236,
+            "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+            "label": "registeredAt",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 238,
+            "contract": "contracts/WhistleblowerRegistry.sol:WhistleblowerRegistry",
+            "label": "stealthMetaAddress",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_string_storage"
+          }
+        ],
+        "numberOfBytes": "128"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

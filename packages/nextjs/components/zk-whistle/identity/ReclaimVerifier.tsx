@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { zeroAddress } from "viem";
 import { ArrowTopRightOnSquareIcon, CheckCircleIcon, FingerPrintIcon } from "@heroicons/react/24/outline";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 import { useReclaimProof } from "~~/hooks/zk-whistle/useReclaimProof";
 import { RECLAIM_PROVIDERS, type ReclaimProviderKey } from "~~/services/zk-whistle/reclaimProtocol";
 
@@ -40,9 +42,18 @@ export const ReclaimVerifier = () => {
     proofHash,
     startVerification,
     submitProofOnChain,
+    submitVerifiedProofOnChain,
     getProofSummary,
     reset,
   } = useReclaimProof();
+
+  // On-chain verification is available only when the registry has a Reclaim
+  // verifier configured; otherwise fall back to recording the proof hash.
+  const { data: verifierAddress } = useScaffoldReadContract({
+    contractName: "WhistleblowerRegistry",
+    functionName: "reclaimVerifier",
+  });
+  const onChainVerifyEnabled = !!verifierAddress && verifierAddress !== zeroAddress;
 
   const [selectedProvider, setSelectedProvider] = useState<ReclaimProviderKey | null>(null);
 
@@ -56,12 +67,12 @@ export const ReclaimVerifier = () => {
   );
 
   const handleSubmit = useCallback(async () => {
-    const success = await submitProofOnChain();
+    const success = onChainVerifyEnabled ? await submitVerifiedProofOnChain() : await submitProofOnChain();
     if (success) {
       reset();
       setSelectedProvider(null);
     }
-  }, [submitProofOnChain, reset]);
+  }, [onChainVerifyEnabled, submitVerifiedProofOnChain, submitProofOnChain, reset]);
 
   // Step 1: Select provider
   if (!selectedProvider && !proof) {
@@ -140,9 +151,33 @@ export const ReclaimVerifier = () => {
           <p className="font-mono text-xs break-all">{proofHash}</p>
         </div>
 
+        {onChainVerifyEnabled ? (
+          <div className="alert alert-info text-sm">
+            <span>
+              The registry has a Reclaim verifier configured: your proof&apos;s witness signatures will be checked{" "}
+              <span className="font-medium">on-chain</span>, so your verified status is cryptographically backed (no
+              trusted party).
+            </span>
+          </div>
+        ) : (
+          <div className="alert text-sm">
+            <span>
+              No on-chain verifier is configured for this network, so only the proof{" "}
+              <span className="font-medium">hash</span> is recorded. Verified status then relies on owner attestation or
+              dev auto-verify.
+            </span>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button className="btn btn-primary flex-1" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? <span className="loading loading-spinner loading-sm"></span> : "Submit Proof Hash On-Chain"}
+            {isSubmitting ? (
+              <span className="loading loading-spinner loading-sm"></span>
+            ) : onChainVerifyEnabled ? (
+              "Verify Proof On-Chain"
+            ) : (
+              "Submit Proof Hash On-Chain"
+            )}
           </button>
           <button
             className="btn btn-ghost"

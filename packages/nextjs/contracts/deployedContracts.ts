@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     DeadMansSwitch: {
-      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
       abi: [
         {
           anonymous: false,
@@ -317,10 +317,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 7,
+      deployedOnBlock: 13,
     },
     Marketplace: {
-      address: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707",
+      address: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788",
       abi: [
         {
           inputs: [
@@ -816,10 +816,121 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 11,
+      deployedOnBlock: 20,
+    },
+    MockReclaim: {
+      address: "0xa513E6E4b8f2a923D98304ec87F64353C4D5C853",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "_shouldPass",
+              type: "bool",
+            },
+          ],
+          name: "setShouldPass",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "shouldPass",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  components: [
+                    {
+                      internalType: "string",
+                      name: "provider",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "parameters",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "context",
+                      type: "string",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.ClaimInfo",
+                  name: "claimInfo",
+                  type: "tuple",
+                },
+                {
+                  components: [
+                    {
+                      components: [
+                        {
+                          internalType: "bytes32",
+                          name: "identifier",
+                          type: "bytes32",
+                        },
+                        {
+                          internalType: "address",
+                          name: "owner",
+                          type: "address",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "timestampS",
+                          type: "uint32",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "epoch",
+                          type: "uint32",
+                        },
+                      ],
+                      internalType: "struct ReclaimTypes.CompleteClaimData",
+                      name: "claim",
+                      type: "tuple",
+                    },
+                    {
+                      internalType: "bytes[]",
+                      name: "signatures",
+                      type: "bytes[]",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.SignedClaim",
+                  name: "signedClaim",
+                  type: "tuple",
+                },
+              ],
+              internalType: "struct ReclaimTypes.Proof",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          name: "verifyProof",
+          outputs: [],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        verifyProof: "contracts/IReclaim.sol",
+      },
+      deployedOnBlock: 15,
     },
     WhistleblowerRegistry: {
-      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
       abi: [
         {
           inputs: [
@@ -909,6 +1020,38 @@ const deployedContracts = {
             },
           ],
           name: "ProofSubmitted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "subject",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "identifier",
+              type: "bytes32",
+            },
+          ],
+          name: "ProofVerifiedOnChain",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "verifier",
+              type: "address",
+            },
+          ],
+          name: "ReclaimVerifierUpdated",
           type: "event",
         },
         {
@@ -1130,6 +1273,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "reclaimVerifier",
+          outputs: [
+            {
+              internalType: "contract IReclaim",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "uint256",
@@ -1171,6 +1327,19 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "_verifier",
+              type: "address",
+            },
+          ],
+          name: "setReclaimVerifier",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "string",
               name: "_stealthMetaAddress",
               type: "string",
@@ -1197,6 +1366,82 @@ const deployedContracts = {
         {
           inputs: [
             {
+              components: [
+                {
+                  components: [
+                    {
+                      internalType: "string",
+                      name: "provider",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "parameters",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "context",
+                      type: "string",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.ClaimInfo",
+                  name: "claimInfo",
+                  type: "tuple",
+                },
+                {
+                  components: [
+                    {
+                      components: [
+                        {
+                          internalType: "bytes32",
+                          name: "identifier",
+                          type: "bytes32",
+                        },
+                        {
+                          internalType: "address",
+                          name: "owner",
+                          type: "address",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "timestampS",
+                          type: "uint32",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "epoch",
+                          type: "uint32",
+                        },
+                      ],
+                      internalType: "struct ReclaimTypes.CompleteClaimData",
+                      name: "claim",
+                      type: "tuple",
+                    },
+                    {
+                      internalType: "bytes[]",
+                      name: "signatures",
+                      type: "bytes[]",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.SignedClaim",
+                  name: "signedClaim",
+                  type: "tuple",
+                },
+              ],
+              internalType: "struct ReclaimTypes.Proof",
+              name: "proof",
+              type: "tuple",
+            },
+          ],
+          name: "submitVerifiedProof",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "address",
               name: "newOwner",
               type: "address",
@@ -1213,7 +1458,1352 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 9,
+      deployedOnBlock: 17,
+    },
+  },
+  84532: {
+    DeadMansSwitch: {
+      address: "0x1c91C807B2f8807128AcEDa57c9264be733e6dE9",
+      abi: [
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "HeartbeatUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "heartbeatInterval",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "recipient",
+              type: "address",
+            },
+          ],
+          name: "SwitchCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "SwitchDeactivated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "litAccessControlId",
+              type: "string",
+            },
+          ],
+          name: "SwitchUpdated",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "checkIn",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_heartbeatInterval",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "_litAccessControlId",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "_recipient",
+              type: "address",
+            },
+          ],
+          name: "createSwitch",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "deactivateSwitch",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "getSwitchDetails",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "lastHeartbeat",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "heartbeatInterval",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "litAccessControlId",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "recipient",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getSwitchOwnerCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "isDeceased",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "switchOwners",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "switches",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "lastHeartbeat",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "heartbeatInterval",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "litAccessControlId",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "recipient",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "timeUntilTrigger",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "_litAccessControlId",
+              type: "string",
+            },
+          ],
+          name: "updateSwitchMetadata",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+      deployedOnBlock: 42623366,
+    },
+    Marketplace: {
+      address: "0x0Bed551ed8ab18094b9B09eEc9C1560e739dcAb1",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_feeRecipient",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_registry",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "ReentrancyGuardReentrantCall",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "bidIndex",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "stealthAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "BidAccepted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "bidIndex",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bidder",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "BidPlaced",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "bidIndex",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bidder",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "BidWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "whistleblower",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "descriptionHash",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "minimumBid",
+              type: "uint256",
+            },
+          ],
+          name: "ListingCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "listingId",
+              type: "uint256",
+            },
+          ],
+          name: "ListingDeactivated",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "PLATFORM_FEE_BPS",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_bidIndex",
+              type: "uint256",
+            },
+            {
+              internalType: "address payable",
+              name: "_stealthAddress",
+              type: "address",
+            },
+          ],
+          name: "acceptBid",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "bids",
+          outputs: [
+            {
+              internalType: "address",
+              name: "bidder",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "isAccepted",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "isWithdrawn",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_descriptionHash",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "_arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "_minimumBid",
+              type: "uint256",
+            },
+          ],
+          name: "createListing",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+          ],
+          name: "deactivateListing",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "feeRecipient",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_bidIndex",
+              type: "uint256",
+            },
+          ],
+          name: "getBid",
+          outputs: [
+            {
+              internalType: "address",
+              name: "bidder",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "isAccepted",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "isWithdrawn",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+          ],
+          name: "getListing",
+          outputs: [
+            {
+              internalType: "address",
+              name: "whistleblower",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "descriptionHash",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "minimumBid",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "isVerified",
+              type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "bidCount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "listingCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "listings",
+          outputs: [
+            {
+              internalType: "address",
+              name: "whistleblower",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "descriptionHash",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "arweaveTxId",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "minimumBid",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "isActive",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "isVerified",
+              type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "bidCount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+          ],
+          name: "placeBid",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "registry",
+          outputs: [
+            {
+              internalType: "contract IWhistleblowerRegistry",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_listingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_bidIndex",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawBid",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+      deployedOnBlock: 42625048,
+    },
+    WhistleblowerRegistry: {
+      address: "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "_autoVerifyOnSubmit",
+              type: "bool",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+          ],
+          name: "OwnableInvalidOwner",
+          type: "error",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+          ],
+          name: "OwnableUnauthorizedAccount",
+          type: "error",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "enabled",
+              type: "bool",
+            },
+          ],
+          name: "AutoVerifyConfigured",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "proofHash",
+              type: "bytes32",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ProofSubmitted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "subject",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "identifier",
+              type: "bytes32",
+            },
+          ],
+          name: "ProofVerifiedOnChain",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "verifier",
+              type: "address",
+            },
+          ],
+          name: "ReclaimVerifierUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "StealthMetaAddressUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "isVerified",
+              type: "bool",
+            },
+          ],
+          name: "VerificationUpdated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "_status",
+              type: "bool",
+            },
+          ],
+          name: "attestVerification",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "autoVerifyOnSubmit",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "getProofCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "getProofHashes",
+          outputs: [
+            {
+              internalType: "bytes32[]",
+              name: "",
+              type: "bytes32[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getRegisteredUserCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "getStealthMetaAddress",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "getUserProfile",
+          outputs: [
+            {
+              internalType: "bytes32[]",
+              name: "proofHashes",
+              type: "bytes32[]",
+            },
+            {
+              internalType: "bool",
+              name: "verified",
+              type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "registeredAt",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "stealthMetaAddress",
+              type: "string",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+          ],
+          name: "isVerified",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          name: "proofHashExists",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "reclaimVerifier",
+          outputs: [
+            {
+              internalType: "contract IReclaim",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "registeredUsers",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bool",
+              name: "_enabled",
+              type: "bool",
+            },
+          ],
+          name: "setAutoVerifyOnSubmit",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_verifier",
+              type: "address",
+            },
+          ],
+          name: "setReclaimVerifier",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_stealthMetaAddress",
+              type: "string",
+            },
+          ],
+          name: "setStealthMetaAddress",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "bytes32",
+              name: "_proofHash",
+              type: "bytes32",
+            },
+          ],
+          name: "submitProofHash",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  components: [
+                    {
+                      internalType: "string",
+                      name: "provider",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "parameters",
+                      type: "string",
+                    },
+                    {
+                      internalType: "string",
+                      name: "context",
+                      type: "string",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.ClaimInfo",
+                  name: "claimInfo",
+                  type: "tuple",
+                },
+                {
+                  components: [
+                    {
+                      components: [
+                        {
+                          internalType: "bytes32",
+                          name: "identifier",
+                          type: "bytes32",
+                        },
+                        {
+                          internalType: "address",
+                          name: "owner",
+                          type: "address",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "timestampS",
+                          type: "uint32",
+                        },
+                        {
+                          internalType: "uint32",
+                          name: "epoch",
+                          type: "uint32",
+                        },
+                      ],
+                      internalType: "struct ReclaimTypes.CompleteClaimData",
+                      name: "claim",
+                      type: "tuple",
+                    },
+                    {
+                      internalType: "bytes[]",
+                      name: "signatures",
+                      type: "bytes[]",
+                    },
+                  ],
+                  internalType: "struct ReclaimTypes.SignedClaim",
+                  name: "signedClaim",
+                  type: "tuple",
+                },
+              ],
+              internalType: "struct ReclaimTypes.Proof",
+              name: "proof",
+              type: "tuple",
+            },
+          ],
+          name: "submitVerifiedProof",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        owner: "@openzeppelin/contracts/access/Ownable.sol",
+        renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
+        transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
+      },
+      deployedOnBlock: 42625047,
     },
   },
 } as const;

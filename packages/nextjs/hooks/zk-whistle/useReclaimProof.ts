@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { transformForOnchain } from "@reclaimprotocol/js-sdk";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import {
@@ -122,6 +123,38 @@ export function useReclaimProof() {
     }
   }, [state.proofHash, address, writeRegistryAsync]);
 
+  /**
+   * Submit the full proof for trustless on-chain verification. The Reclaim
+   * verifier checks witness signatures on-chain; verification accrues to the
+   * proof's owner. Requires a Reclaim verifier to be configured on the registry.
+   */
+  const submitVerifiedProofOnChain = useCallback(async (): Promise<boolean> => {
+    if (!state.proof || !address) {
+      notification.error("No proof to submit or wallet not connected");
+      return false;
+    }
+
+    setState(prev => ({ ...prev, isSubmitting: true, error: null }));
+
+    try {
+      const { claimInfo, signedClaim } = transformForOnchain(state.proof as any);
+      await writeRegistryAsync({
+        functionName: "submitVerifiedProof",
+
+        args: [{ claimInfo, signedClaim } as any],
+      });
+
+      setState(prev => ({ ...prev, isSubmitting: false }));
+      notification.success("Proof verified on-chain!");
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "On-chain verification failed";
+      setState(prev => ({ ...prev, isSubmitting: false, error: message }));
+      notification.error(message);
+      return false;
+    }
+  }, [state.proof, address, writeRegistryAsync]);
+
   const reset = useCallback(() => {
     setState({
       isInitializing: false,
@@ -139,6 +172,7 @@ export function useReclaimProof() {
     isRegistryPending,
     startVerification,
     submitProofOnChain,
+    submitVerifiedProofOnChain,
     reset,
     getProofSummary,
   };

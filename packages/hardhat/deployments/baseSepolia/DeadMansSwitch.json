@@ -1,0 +1,535 @@
+{
+  "address": "0x1c91C807B2f8807128AcEDa57c9264be733e6dE9",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "HeartbeatUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "heartbeatInterval",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        }
+      ],
+      "name": "SwitchCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        }
+      ],
+      "name": "SwitchDeactivated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "litAccessControlId",
+          "type": "string"
+        }
+      ],
+      "name": "SwitchUpdated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "checkIn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_heartbeatInterval",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_litAccessControlId",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "_recipient",
+          "type": "address"
+        }
+      ],
+      "name": "createSwitch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "deactivateSwitch",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "getSwitchDetails",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lastHeartbeat",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "heartbeatInterval",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "litAccessControlId",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSwitchOwnerCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "isDeceased",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "switchOwners",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "switches",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "lastHeartbeat",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "heartbeatInterval",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "litAccessControlId",
+          "type": "string"
+        },
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_user",
+          "type": "address"
+        }
+      ],
+      "name": "timeUntilTrigger",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_litAccessControlId",
+          "type": "string"
+        }
+      ],
+      "name": "updateSwitchMetadata",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0xffd89dfa72b385993fde25d8572bc5a68c92adf118b0d767ef6c7bcafceb8cd0",
+  "receipt": {
+    "to": null,
+    "from": "0x4b7866e717f27Fa1C38313D25F647aE0598571BD",
+    "contractAddress": "0x1c91C807B2f8807128AcEDa57c9264be733e6dE9",
+    "transactionIndex": 2,
+    "gasUsed": "926000",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "transactionHash": "0xffd89dfa72b385993fde25d8572bc5a68c92adf118b0d767ef6c7bcafceb8cd0",
+    "logs": [],
+    "blockNumber": 42623366,
+    "cumulativeGasUsed": "2395175",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "numDeployments": 1,
+  "solcInputHash": "d8b3185bfa63709855859fe8f869fbfa",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"HeartbeatUpdated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"heartbeatInterval\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"}],\"name\":\"SwitchCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"SwitchDeactivated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"litAccessControlId\",\"type\":\"string\"}],\"name\":\"SwitchUpdated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"checkIn\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_heartbeatInterval\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_litAccessControlId\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"_recipient\",\"type\":\"address\"}],\"name\":\"createSwitch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"deactivateSwitch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"getSwitchDetails\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lastHeartbeat\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"heartbeatInterval\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"litAccessControlId\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getSwitchOwnerCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"isDeceased\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"switchOwners\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"switches\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"lastHeartbeat\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"heartbeatInterval\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"litAccessControlId\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_user\",\"type\":\"address\"}],\"name\":\"timeUntilTrigger\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_litAccessControlId\",\"type\":\"string\"}],\"name\":\"updateSwitchMetadata\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"No plaintext data is stored on-chain. Only references to encrypted payloads on Arweave and Lit access control identifiers are kept.\",\"kind\":\"dev\",\"methods\":{\"createSwitch(uint256,string,string,address)\":{\"params\":{\"_arweaveTxId\":\"Arweave transaction ID storing the encrypted payload.\",\"_heartbeatInterval\":\"Seconds the user has between check-ins before        the switch is considered triggered.\",\"_litAccessControlId\":\"Identifier for the Lit access-control condition set.\",\"_recipient\":\"Address that should receive the decrypted data.        Use address(0) to indicate public release.\"}},\"getSwitchDetails(address)\":{\"params\":{\"_user\":\"Address of the switch owner.\"}},\"isDeceased(address)\":{\"params\":{\"_user\":\"Address of the switch owner.\"},\"returns\":{\"_0\":\"True if the user has not checked in within their interval.\"}},\"timeUntilTrigger(address)\":{\"params\":{\"_user\":\"Address of the switch owner.\"}},\"updateSwitchMetadata(string,string)\":{\"params\":{\"_arweaveTxId\":\"New Arweave transaction ID.\",\"_litAccessControlId\":\"New Lit access-control identifier.\"}}},\"title\":\"DeadMansSwitch\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"checkIn()\":{\"notice\":\"Update the heartbeat timestamp, proving the user is still active.\"},\"createSwitch(uint256,string,string,address)\":{\"notice\":\"Create a new dead man's switch.\"},\"deactivateSwitch()\":{\"notice\":\"Deactivate a switch. The user can cancel their switch while alive.\"},\"getSwitchDetails(address)\":{\"notice\":\"Get the full details of a user's switch.\"},\"getSwitchOwnerCount()\":{\"notice\":\"Get the number of switch owners (for off-chain enumeration).\"},\"isDeceased(address)\":{\"notice\":\"Returns true if the user's heartbeat has expired. This is the primary function called by Lit Protocol ACCs to determine whether decryption should be authorized.\"},\"switchOwners(uint256)\":{\"notice\":\"Track all users who have created switches for enumeration\"},\"switches(address)\":{\"notice\":\"Each address may have one active switch\"},\"timeUntilTrigger(address)\":{\"notice\":\"Seconds remaining until the switch triggers (0 if already triggered).\"},\"updateSwitchMetadata(string,string)\":{\"notice\":\"Update storage references (e.g. after re-encrypting or re-uploading).\"}},\"notice\":\"Manages heartbeat-based dead man's switches for whistleblowers. If a user fails to check in within their configured interval, the switch is considered \\\"triggered\\\" and encrypted data can be released via Lit Protocol Access Control Conditions that call isDeceased().\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/DeadMansSwitch.sol\":\"DeadMansSwitch\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/DeadMansSwitch.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0 <0.9.0;\\n\\n/**\\n * @title DeadMansSwitch\\n * @notice Manages heartbeat-based dead man's switches for whistleblowers.\\n * If a user fails to check in within their configured interval,\\n * the switch is considered \\\"triggered\\\" and encrypted data can be released\\n * via Lit Protocol Access Control Conditions that call isDeceased().\\n * @dev No plaintext data is stored on-chain. Only references to encrypted\\n * payloads on Arweave and Lit access control identifiers are kept.\\n */\\ncontract DeadMansSwitch {\\n    // -------------------------------------------------------\\n    // Types\\n    // -------------------------------------------------------\\n\\n    struct Switch {\\n        uint256 lastHeartbeat;\\n        uint256 heartbeatInterval; // seconds between required check-ins\\n        string arweaveTxId; // Arweave transaction ID of encrypted payload\\n        string litAccessControlId; // Lit Protocol access-control reference\\n        address recipient; // intended recipient (address(0) = public)\\n        bool isActive;\\n    }\\n\\n    // -------------------------------------------------------\\n    // State\\n    // -------------------------------------------------------\\n\\n    /// @notice Each address may have one active switch\\n    mapping(address => Switch) public switches;\\n\\n    /// @notice Track all users who have created switches for enumeration\\n    address[] public switchOwners;\\n    mapping(address => bool) private hasSwitchRecord;\\n\\n    // -------------------------------------------------------\\n    // Events\\n    // -------------------------------------------------------\\n\\n    event SwitchCreated(address indexed user, uint256 heartbeatInterval, string arweaveTxId, address recipient);\\n\\n    event HeartbeatUpdated(address indexed user, uint256 timestamp);\\n\\n    event SwitchDeactivated(address indexed user);\\n\\n    event SwitchUpdated(address indexed user, string arweaveTxId, string litAccessControlId);\\n\\n    // -------------------------------------------------------\\n    // Modifiers\\n    // -------------------------------------------------------\\n\\n    modifier onlyActiveSwitchOwner() {\\n        require(switches[msg.sender].isActive, \\\"No active switch\\\");\\n        _;\\n    }\\n\\n    // -------------------------------------------------------\\n    // Write Functions\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Create a new dead man's switch.\\n     * @param _heartbeatInterval Seconds the user has between check-ins before\\n     *        the switch is considered triggered.\\n     * @param _arweaveTxId Arweave transaction ID storing the encrypted payload.\\n     * @param _litAccessControlId Identifier for the Lit access-control condition set.\\n     * @param _recipient Address that should receive the decrypted data.\\n     *        Use address(0) to indicate public release.\\n     */\\n    function createSwitch(\\n        uint256 _heartbeatInterval,\\n        string calldata _arweaveTxId,\\n        string calldata _litAccessControlId,\\n        address _recipient\\n    ) external {\\n        require(!switches[msg.sender].isActive, \\\"Switch already active\\\");\\n        require(_heartbeatInterval > 0, \\\"Interval must be > 0\\\");\\n        require(bytes(_arweaveTxId).length > 0, \\\"Arweave TX ID required\\\");\\n\\n        switches[msg.sender] = Switch({\\n            lastHeartbeat: block.timestamp,\\n            heartbeatInterval: _heartbeatInterval,\\n            arweaveTxId: _arweaveTxId,\\n            litAccessControlId: _litAccessControlId,\\n            recipient: _recipient,\\n            isActive: true\\n        });\\n\\n        if (!hasSwitchRecord[msg.sender]) {\\n            switchOwners.push(msg.sender);\\n            hasSwitchRecord[msg.sender] = true;\\n        }\\n\\n        emit SwitchCreated(msg.sender, _heartbeatInterval, _arweaveTxId, _recipient);\\n        emit HeartbeatUpdated(msg.sender, block.timestamp);\\n    }\\n\\n    /**\\n     * @notice Update the heartbeat timestamp, proving the user is still active.\\n     */\\n    function checkIn() external onlyActiveSwitchOwner {\\n        switches[msg.sender].lastHeartbeat = block.timestamp;\\n        emit HeartbeatUpdated(msg.sender, block.timestamp);\\n    }\\n\\n    /**\\n     * @notice Deactivate a switch. The user can cancel their switch while alive.\\n     */\\n    function deactivateSwitch() external onlyActiveSwitchOwner {\\n        switches[msg.sender].isActive = false;\\n        emit SwitchDeactivated(msg.sender);\\n    }\\n\\n    /**\\n     * @notice Update storage references (e.g. after re-encrypting or re-uploading).\\n     * @param _arweaveTxId New Arweave transaction ID.\\n     * @param _litAccessControlId New Lit access-control identifier.\\n     */\\n    function updateSwitchMetadata(\\n        string calldata _arweaveTxId,\\n        string calldata _litAccessControlId\\n    ) external onlyActiveSwitchOwner {\\n        if (bytes(_arweaveTxId).length > 0) {\\n            switches[msg.sender].arweaveTxId = _arweaveTxId;\\n        }\\n        if (bytes(_litAccessControlId).length > 0) {\\n            switches[msg.sender].litAccessControlId = _litAccessControlId;\\n        }\\n        emit SwitchUpdated(msg.sender, _arweaveTxId, _litAccessControlId);\\n    }\\n\\n    // -------------------------------------------------------\\n    // Read Functions (used by Lit Access Control Conditions)\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Returns true if the user's heartbeat has expired.\\n     * This is the primary function called by Lit Protocol ACCs\\n     * to determine whether decryption should be authorized.\\n     * @param _user Address of the switch owner.\\n     * @return True if the user has not checked in within their interval.\\n     */\\n    function isDeceased(address _user) external view returns (bool) {\\n        Switch storage s = switches[_user];\\n        if (!s.isActive) return false;\\n        return block.timestamp > s.lastHeartbeat + s.heartbeatInterval;\\n    }\\n\\n    /**\\n     * @notice Get the full details of a user's switch.\\n     * @param _user Address of the switch owner.\\n     */\\n    function getSwitchDetails(\\n        address _user\\n    )\\n        external\\n        view\\n        returns (\\n            uint256 lastHeartbeat,\\n            uint256 heartbeatInterval,\\n            string memory arweaveTxId,\\n            string memory litAccessControlId,\\n            address recipient,\\n            bool isActive\\n        )\\n    {\\n        Switch storage s = switches[_user];\\n        return (s.lastHeartbeat, s.heartbeatInterval, s.arweaveTxId, s.litAccessControlId, s.recipient, s.isActive);\\n    }\\n\\n    /**\\n     * @notice Get the number of switch owners (for off-chain enumeration).\\n     */\\n    function getSwitchOwnerCount() external view returns (uint256) {\\n        return switchOwners.length;\\n    }\\n\\n    /**\\n     * @notice Seconds remaining until the switch triggers (0 if already triggered).\\n     * @param _user Address of the switch owner.\\n     */\\n    function timeUntilTrigger(address _user) external view returns (uint256) {\\n        Switch storage s = switches[_user];\\n        if (!s.isActive) return 0;\\n        uint256 deadline = s.lastHeartbeat + s.heartbeatInterval;\\n        if (block.timestamp >= deadline) return 0;\\n        return deadline - block.timestamp;\\n    }\\n}\\n\",\"keccak256\":\"0x08806f1ebdc48619e8bac5cc8f73ef56106ba54a8608d7b32a10984f5d946aa4\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50610fc98061001f6000396000f3fe608060405234801561001057600080fd5b506004361061009e5760003560e01c8063a24c373e11610066578063a24c373e14610113578063a977bdf814610126578063b9f84eeb1461012e578063be9c91b614610141578063fac82a4c1461016c57600080fd5b806304c76678146100a3578063183ff085146100c95780634d37b133146100d357806373a97393146100db5780637748f09414610100575b600080fd5b6100b66100b1366004610a5d565b61018f565b6040519081526020015b60405180910390f35b6100d16101fb565b005b6100d1610285565b6100ee6100e9366004610a5d565b610303565b6040516100c096959493929190610ac5565b6100d161010e366004610b63565b61049e565b6100ee610121366004610a5d565b61056e565b6001546100b6565b6100d161013c366004610bd4565b6106c3565b61015461014f366004610c62565b6109c9565b6040516001600160a01b0390911681526020016100c0565b61017f61017a366004610a5d565b6109f3565b60405190151581526020016100c0565b6001600160a01b03811660009081526020819052604081206004810154600160a01b900460ff166101c35750600092915050565b600181015481546000916101d691610c91565b90508042106101e9575060009392505050565b6101f34282610caa565b949350505050565b33600090815260208190526040902060040154600160a01b900460ff1661023d5760405162461bcd60e51b815260040161023490610cbd565b60405180910390fd5b3360008181526020818152604091829020429081905591519182527f4ea9e94baeeb3668b47d8d9b4cc8f5a1784d783dd263d7d76f8c10d6a10aed44910160405180910390a2565b33600090815260208190526040902060040154600160a01b900460ff166102be5760405162461bcd60e51b815260040161023490610cbd565b33600081815260208190526040808220600401805460ff60a01b19169055517f19348e71e1ff923ff4624f0c38b9cccf160d0d7763009f6f97232a7d3ab103029190a2565b6000806060806000806000806000896001600160a01b03166001600160a01b0316815260200190815260200160002090508060000154816001015482600201836003018460040160009054906101000a90046001600160a01b03168560040160149054906101000a900460ff1683805461037c90610ce7565b80601f01602080910402602001604051908101604052809291908181526020018280546103a890610ce7565b80156103f55780601f106103ca576101008083540402835291602001916103f5565b820191906000526020600020905b8154815290600101906020018083116103d857829003601f168201915b5050505050935082805461040890610ce7565b80601f016020809104026020016040519081016040528092919081815260200182805461043490610ce7565b80156104815780601f1061045657610100808354040283529160200191610481565b820191906000526020600020905b81548152906001019060200180831161046457829003601f168201915b505050505092509650965096509650965096505091939550919395565b33600090815260208190526040902060040154600160a01b900460ff166104d75760405162461bcd60e51b815260040161023490610cbd565b82156104fc573360009081526020819052604090206002016104fa848683610d86565b505b80156105215733600090815260208190526040902060030161051f828483610d86565b505b336001600160a01b03167fabba72cb7b5592e8e6c2094e2c28f2577e54610381683102dd3064efe2c566ba858585856040516105609493929190610e6f565b60405180910390a250505050565b6000602081905290815260409020805460018201546002830180549293919261059690610ce7565b80601f01602080910402602001604051908101604052809291908181526020018280546105c290610ce7565b801561060f5780601f106105e45761010080835404028352916020019161060f565b820191906000526020600020905b8154815290600101906020018083116105f257829003601f168201915b50505050509080600301805461062490610ce7565b80601f016020809104026020016040519081016040528092919081815260200182805461065090610ce7565b801561069d5780601f106106725761010080835404028352916020019161069d565b820191906000526020600020905b81548152906001019060200180831161068057829003601f168201915b505050600490930154919250506001600160a01b0381169060ff600160a01b9091041686565b33600090815260208190526040902060040154600160a01b900460ff16156107255760405162461bcd60e51b815260206004820152601560248201527453776974636820616c72656164792061637469766560581b6044820152606401610234565b6000861161076c5760405162461bcd60e51b81526020600482015260146024820152730496e74657276616c206d757374206265203e20360641b6044820152606401610234565b836107b25760405162461bcd60e51b8152602060048201526016602482015275105c9dd9585d99481516081251081c995c5d5a5c995960521b6044820152606401610234565b6040518060c0016040528042815260200187815260200186868080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250505090825250604080516020601f87018190048102820181019092528581529181019190869086908190840183828082843760009201829052509385525050506001600160a01b03841660208084019190915260016040938401819052338352828252918390208451815590840151918101919091559082015160028201906108859082610ea1565b506060820151600382019061089a9082610ea1565b5060808201516004909101805460a0909301511515600160a01b026001600160a81b03199093166001600160a01b03909216919091179190911790553360009081526002602052604090205460ff16610945576001805480820182557fb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60180546001600160a01b031916339081179091556000908152600260205260409020805460ff191690911790555b336001600160a01b03167fb57755858301940da3ebcce18508d0a7f0ff65ac5b59867a4734c0d1e06bc3f2878787856040516109849493929190610f60565b60405180910390a260405142815233907f4ea9e94baeeb3668b47d8d9b4cc8f5a1784d783dd263d7d76f8c10d6a10aed449060200160405180910390a2505050505050565b600181815481106109d957600080fd5b6000918252602090912001546001600160a01b0316905081565b6001600160a01b03811660009081526020819052604081206004810154600160a01b900460ff16610a275750600092915050565b60018101548154610a389190610c91565b42119392505050565b80356001600160a01b0381168114610a5857600080fd5b919050565b600060208284031215610a6f57600080fd5b610a7882610a41565b9392505050565b6000815180845260005b81811015610aa557602081850181015186830182015201610a89565b506000602082860101526020601f19601f83011685010191505092915050565b86815285602082015260c060408201526000610ae460c0830187610a7f565b8281036060840152610af68187610a7f565b6001600160a01b03959095166080840152505090151560a090910152949350505050565b60008083601f840112610b2c57600080fd5b50813567ffffffffffffffff811115610b4457600080fd5b602083019150836020828501011115610b5c57600080fd5b9250929050565b60008060008060408587031215610b7957600080fd5b843567ffffffffffffffff811115610b9057600080fd5b610b9c87828801610b1a565b909550935050602085013567ffffffffffffffff811115610bbc57600080fd5b610bc887828801610b1a565b95989497509550505050565b60008060008060008060808789031215610bed57600080fd5b86359550602087013567ffffffffffffffff811115610c0b57600080fd5b610c1789828a01610b1a565b909650945050604087013567ffffffffffffffff811115610c3757600080fd5b610c4389828a01610b1a565b9094509250610c56905060608801610a41565b90509295509295509295565b600060208284031215610c7457600080fd5b5035919050565b634e487b7160e01b600052601160045260246000fd5b80820180821115610ca457610ca4610c7b565b92915050565b81810381811115610ca457610ca4610c7b565b60208082526010908201526f09cde40c2c6e8d2ecca40e6eed2e8c6d60831b604082015260600190565b600181811c90821680610cfb57607f821691505b602082108103610d1b57634e487b7160e01b600052602260045260246000fd5b50919050565b634e487b7160e01b600052604160045260246000fd5b601f821115610d8157806000526020600020601f840160051c81016020851015610d5e5750805b601f840160051c820191505b81811015610d7e5760008155600101610d6a565b50505b505050565b67ffffffffffffffff831115610d9e57610d9e610d21565b610db283610dac8354610ce7565b83610d37565b6000601f841160018114610de65760008515610dce5750838201355b600019600387901b1c1916600186901b178355610d7e565b600083815260209020601f19861690835b82811015610e175786850135825560209485019460019092019101610df7565b5086821015610e345760001960f88860031b161c19848701351681555b505060018560011b0183555050505050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b604081526000610e83604083018688610e46565b8281036020840152610e96818587610e46565b979650505050505050565b815167ffffffffffffffff811115610ebb57610ebb610d21565b610ecf81610ec98454610ce7565b84610d37565b6020601f821160018114610f035760008315610eeb5750848201515b600019600385901b1c1916600184901b178455610d7e565b600084815260208120601f198516915b82811015610f335787850151825560209485019460019092019101610f13565b5084821015610f515786840151600019600387901b60f8161c191681555b50505050600190811b01905550565b848152606060208201526000610f7a606083018587610e46565b905060018060a01b03831660408301529594505050505056fea2646970667358221220a4494305171bba0f951b4c80b85799abd7042896fbbf7ada700956cda456b90e64736f6c634300081e0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061009e5760003560e01c8063a24c373e11610066578063a24c373e14610113578063a977bdf814610126578063b9f84eeb1461012e578063be9c91b614610141578063fac82a4c1461016c57600080fd5b806304c76678146100a3578063183ff085146100c95780634d37b133146100d357806373a97393146100db5780637748f09414610100575b600080fd5b6100b66100b1366004610a5d565b61018f565b6040519081526020015b60405180910390f35b6100d16101fb565b005b6100d1610285565b6100ee6100e9366004610a5d565b610303565b6040516100c096959493929190610ac5565b6100d161010e366004610b63565b61049e565b6100ee610121366004610a5d565b61056e565b6001546100b6565b6100d161013c366004610bd4565b6106c3565b61015461014f366004610c62565b6109c9565b6040516001600160a01b0390911681526020016100c0565b61017f61017a366004610a5d565b6109f3565b60405190151581526020016100c0565b6001600160a01b03811660009081526020819052604081206004810154600160a01b900460ff166101c35750600092915050565b600181015481546000916101d691610c91565b90508042106101e9575060009392505050565b6101f34282610caa565b949350505050565b33600090815260208190526040902060040154600160a01b900460ff1661023d5760405162461bcd60e51b815260040161023490610cbd565b60405180910390fd5b3360008181526020818152604091829020429081905591519182527f4ea9e94baeeb3668b47d8d9b4cc8f5a1784d783dd263d7d76f8c10d6a10aed44910160405180910390a2565b33600090815260208190526040902060040154600160a01b900460ff166102be5760405162461bcd60e51b815260040161023490610cbd565b33600081815260208190526040808220600401805460ff60a01b19169055517f19348e71e1ff923ff4624f0c38b9cccf160d0d7763009f6f97232a7d3ab103029190a2565b6000806060806000806000806000896001600160a01b03166001600160a01b0316815260200190815260200160002090508060000154816001015482600201836003018460040160009054906101000a90046001600160a01b03168560040160149054906101000a900460ff1683805461037c90610ce7565b80601f01602080910402602001604051908101604052809291908181526020018280546103a890610ce7565b80156103f55780601f106103ca576101008083540402835291602001916103f5565b820191906000526020600020905b8154815290600101906020018083116103d857829003601f168201915b5050505050935082805461040890610ce7565b80601f016020809104026020016040519081016040528092919081815260200182805461043490610ce7565b80156104815780601f1061045657610100808354040283529160200191610481565b820191906000526020600020905b81548152906001019060200180831161046457829003601f168201915b505050505092509650965096509650965096505091939550919395565b33600090815260208190526040902060040154600160a01b900460ff166104d75760405162461bcd60e51b815260040161023490610cbd565b82156104fc573360009081526020819052604090206002016104fa848683610d86565b505b80156105215733600090815260208190526040902060030161051f828483610d86565b505b336001600160a01b03167fabba72cb7b5592e8e6c2094e2c28f2577e54610381683102dd3064efe2c566ba858585856040516105609493929190610e6f565b60405180910390a250505050565b6000602081905290815260409020805460018201546002830180549293919261059690610ce7565b80601f01602080910402602001604051908101604052809291908181526020018280546105c290610ce7565b801561060f5780601f106105e45761010080835404028352916020019161060f565b820191906000526020600020905b8154815290600101906020018083116105f257829003601f168201915b50505050509080600301805461062490610ce7565b80601f016020809104026020016040519081016040528092919081815260200182805461065090610ce7565b801561069d5780601f106106725761010080835404028352916020019161069d565b820191906000526020600020905b81548152906001019060200180831161068057829003601f168201915b505050600490930154919250506001600160a01b0381169060ff600160a01b9091041686565b33600090815260208190526040902060040154600160a01b900460ff16156107255760405162461bcd60e51b815260206004820152601560248201527453776974636820616c72656164792061637469766560581b6044820152606401610234565b6000861161076c5760405162461bcd60e51b81526020600482015260146024820152730496e74657276616c206d757374206265203e20360641b6044820152606401610234565b836107b25760405162461bcd60e51b8152602060048201526016602482015275105c9dd9585d99481516081251081c995c5d5a5c995960521b6044820152606401610234565b6040518060c0016040528042815260200187815260200186868080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250505090825250604080516020601f87018190048102820181019092528581529181019190869086908190840183828082843760009201829052509385525050506001600160a01b03841660208084019190915260016040938401819052338352828252918390208451815590840151918101919091559082015160028201906108859082610ea1565b506060820151600382019061089a9082610ea1565b5060808201516004909101805460a0909301511515600160a01b026001600160a81b03199093166001600160a01b03909216919091179190911790553360009081526002602052604090205460ff16610945576001805480820182557fb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf60180546001600160a01b031916339081179091556000908152600260205260409020805460ff191690911790555b336001600160a01b03167fb57755858301940da3ebcce18508d0a7f0ff65ac5b59867a4734c0d1e06bc3f2878787856040516109849493929190610f60565b60405180910390a260405142815233907f4ea9e94baeeb3668b47d8d9b4cc8f5a1784d783dd263d7d76f8c10d6a10aed449060200160405180910390a2505050505050565b600181815481106109d957600080fd5b6000918252602090912001546001600160a01b0316905081565b6001600160a01b03811660009081526020819052604081206004810154600160a01b900460ff16610a275750600092915050565b60018101548154610a389190610c91565b42119392505050565b80356001600160a01b0381168114610a5857600080fd5b919050565b600060208284031215610a6f57600080fd5b610a7882610a41565b9392505050565b6000815180845260005b81811015610aa557602081850181015186830182015201610a89565b506000602082860101526020601f19601f83011685010191505092915050565b86815285602082015260c060408201526000610ae460c0830187610a7f565b8281036060840152610af68187610a7f565b6001600160a01b03959095166080840152505090151560a090910152949350505050565b60008083601f840112610b2c57600080fd5b50813567ffffffffffffffff811115610b4457600080fd5b602083019150836020828501011115610b5c57600080fd5b9250929050565b60008060008060408587031215610b7957600080fd5b843567ffffffffffffffff811115610b9057600080fd5b610b9c87828801610b1a565b909550935050602085013567ffffffffffffffff811115610bbc57600080fd5b610bc887828801610b1a565b95989497509550505050565b60008060008060008060808789031215610bed57600080fd5b86359550602087013567ffffffffffffffff811115610c0b57600080fd5b610c1789828a01610b1a565b909650945050604087013567ffffffffffffffff811115610c3757600080fd5b610c4389828a01610b1a565b9094509250610c56905060608801610a41565b90509295509295509295565b600060208284031215610c7457600080fd5b5035919050565b634e487b7160e01b600052601160045260246000fd5b80820180821115610ca457610ca4610c7b565b92915050565b81810381811115610ca457610ca4610c7b565b60208082526010908201526f09cde40c2c6e8d2ecca40e6eed2e8c6d60831b604082015260600190565b600181811c90821680610cfb57607f821691505b602082108103610d1b57634e487b7160e01b600052602260045260246000fd5b50919050565b634e487b7160e01b600052604160045260246000fd5b601f821115610d8157806000526020600020601f840160051c81016020851015610d5e5750805b601f840160051c820191505b81811015610d7e5760008155600101610d6a565b50505b505050565b67ffffffffffffffff831115610d9e57610d9e610d21565b610db283610dac8354610ce7565b83610d37565b6000601f841160018114610de65760008515610dce5750838201355b600019600387901b1c1916600186901b178355610d7e565b600083815260209020601f19861690835b82811015610e175786850135825560209485019460019092019101610df7565b5086821015610e345760001960f88860031b161c19848701351681555b505060018560011b0183555050505050565b81835281816020850137506000828201602090810191909152601f909101601f19169091010190565b604081526000610e83604083018688610e46565b8281036020840152610e96818587610e46565b979650505050505050565b815167ffffffffffffffff811115610ebb57610ebb610d21565b610ecf81610ec98454610ce7565b84610d37565b6020601f821160018114610f035760008315610eeb5750848201515b600019600385901b1c1916600184901b178455610d7e565b600084815260208120601f198516915b82811015610f335787850151825560209485019460019092019101610f13565b5084821015610f515786840151600019600387901b60f8161c191681555b50505050600190811b01905550565b848152606060208201526000610f7a606083018587610e46565b905060018060a01b03831660408301529594505050505056fea2646970667358221220a4494305171bba0f951b4c80b85799abd7042896fbbf7ada700956cda456b90e64736f6c634300081e0033",
+  "devdoc": {
+    "details": "No plaintext data is stored on-chain. Only references to encrypted payloads on Arweave and Lit access control identifiers are kept.",
+    "kind": "dev",
+    "methods": {
+      "createSwitch(uint256,string,string,address)": {
+        "params": {
+          "_arweaveTxId": "Arweave transaction ID storing the encrypted payload.",
+          "_heartbeatInterval": "Seconds the user has between check-ins before        the switch is considered triggered.",
+          "_litAccessControlId": "Identifier for the Lit access-control condition set.",
+          "_recipient": "Address that should receive the decrypted data.        Use address(0) to indicate public release."
+        }
+      },
+      "getSwitchDetails(address)": {
+        "params": {
+          "_user": "Address of the switch owner."
+        }
+      },
+      "isDeceased(address)": {
+        "params": {
+          "_user": "Address of the switch owner."
+        },
+        "returns": {
+          "_0": "True if the user has not checked in within their interval."
+        }
+      },
+      "timeUntilTrigger(address)": {
+        "params": {
+          "_user": "Address of the switch owner."
+        }
+      },
+      "updateSwitchMetadata(string,string)": {
+        "params": {
+          "_arweaveTxId": "New Arweave transaction ID.",
+          "_litAccessControlId": "New Lit access-control identifier."
+        }
+      }
+    },
+    "title": "DeadMansSwitch",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "checkIn()": {
+        "notice": "Update the heartbeat timestamp, proving the user is still active."
+      },
+      "createSwitch(uint256,string,string,address)": {
+        "notice": "Create a new dead man's switch."
+      },
+      "deactivateSwitch()": {
+        "notice": "Deactivate a switch. The user can cancel their switch while alive."
+      },
+      "getSwitchDetails(address)": {
+        "notice": "Get the full details of a user's switch."
+      },
+      "getSwitchOwnerCount()": {
+        "notice": "Get the number of switch owners (for off-chain enumeration)."
+      },
+      "isDeceased(address)": {
+        "notice": "Returns true if the user's heartbeat has expired. This is the primary function called by Lit Protocol ACCs to determine whether decryption should be authorized."
+      },
+      "switchOwners(uint256)": {
+        "notice": "Track all users who have created switches for enumeration"
+      },
+      "switches(address)": {
+        "notice": "Each address may have one active switch"
+      },
+      "timeUntilTrigger(address)": {
+        "notice": "Seconds remaining until the switch triggers (0 if already triggered)."
+      },
+      "updateSwitchMetadata(string,string)": {
+        "notice": "Update storage references (e.g. after re-encrypting or re-uploading)."
+      }
+    },
+    "notice": "Manages heartbeat-based dead man's switches for whistleblowers. If a user fails to check in within their configured interval, the switch is considered \"triggered\" and encrypted data can be released via Lit Protocol Access Control Conditions that call isDeceased().",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 199,
+        "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+        "label": "switches",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_address,t_struct(Switch)193_storage)"
+      },
+      {
+        "astId": 203,
+        "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+        "label": "switchOwners",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_array(t_address)dyn_storage"
+      },
+      {
+        "astId": 207,
+        "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+        "label": "hasSwitchRecord",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_address,t_bool)"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_address,t_struct(Switch)193_storage)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => struct DeadMansSwitch.Switch)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Switch)193_storage"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Switch)193_storage": {
+        "encoding": "inplace",
+        "label": "struct DeadMansSwitch.Switch",
+        "members": [
+          {
+            "astId": 182,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "lastHeartbeat",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 184,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "heartbeatInterval",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 186,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "arweaveTxId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 188,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "litAccessControlId",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 190,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "recipient",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_address"
+          },
+          {
+            "astId": 192,
+            "contract": "contracts/DeadMansSwitch.sol:DeadMansSwitch",
+            "label": "isActive",
+            "offset": 20,
+            "slot": "4",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

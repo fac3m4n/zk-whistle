@@ -106,18 +106,31 @@ designated verifier (e.g. a backend that validates Reclaim proofs).
 
 | Function | Purpose |
 | --- | --- |
-| `submitProofHash(bytes32)` | Record a Reclaim proof hash |
+| `submitVerifiedProof(Proof)` | **Trustless:** verify a full Reclaim proof on-chain via the configured verifier; marks the proof's `owner` verified |
+| `submitProofHash(bytes32)` | Record a Reclaim proof hash (dev/attestation path) |
+| `setReclaimVerifier(address)` *(owner)* | Set the deployed Reclaim verifier (enables `submitVerifiedProof`) |
 | `setStealthMetaAddress(string)` | Publish an ERC-5564 stealth meta-address |
 | `attestVerification(user, bool)` *(owner)* | Authoritatively set verified status |
 | `setAutoVerifyOnSubmit(bool)` *(owner)* | Toggle dev-only trust-on-submit verification |
 | `isVerified(user)` / `getProofCount(user)` / `getUserProfile(user)` | Reputation reads |
 
-> **Trust model.** `autoVerifyOnSubmit` (a constructor flag, default `true` for
-> local dev) makes any submitted hash mark the submitter verified — convenient
-> for demos but **not** a real credential check. In production, deploy with it
-> `false` and let the `onlyOwner` verifier call `attestVerification` after
-> validating the Reclaim proof off-chain (or once on-chain proof verification
-> lands — see roadmap).
+> **Trust model (strongest → weakest).**
+> 1. **On-chain verified (trustless):** `submitVerifiedProof(proof)` passes the full
+>    Reclaim proof to a deployed Reclaim verifier (`reclaimVerifier`), which checks
+>    the witness signatures **on-chain**. Verification accrues to the proof's
+>    `owner`, so a valid proof can't be replayed to verify a different account (and
+>    it's relay/gasless-friendly). This gives `isVerified` cryptographic meaning
+>    with no trusted party. The frontend builds the on-chain `Proof` via the SDK's
+>    `transformForOnchain`.
+> 2. **Owner attestation:** the `onlyOwner` verifier calls `attestVerification`
+>    after validating a proof off-chain — for chains/providers without a deployed
+>    verifier.
+> 3. **Trust-on-submit (dev only):** `autoVerifyOnSubmit` (constructor flag, default
+>    `true` on local Hardhat, `false` on live networks) marks any hash submitter
+>    verified. Convenient for demos, **not** a credential check.
+>
+> The verifier is wired at deploy time: `MockReclaim` on local Hardhat, or the real
+> Reclaim verifier via `RECLAIM_VERIFIER_ADDRESS` on live networks.
 
 ### `Marketplace.sol`
 Escrowed, anonymous information exchange with a 2.5% platform fee (`PLATFORM_FEE_BPS = 250`).
@@ -141,9 +154,10 @@ zk-whistle/
 │   └── ZK-Whistle V2 Architecture Update.md   # Thesis architecture report
 ├── packages/
 │   ├── hardhat/
-│   │   ├── contracts/                          # DeadMansSwitch, WhistleblowerRegistry, Marketplace
-│   │   ├── deploy/                             # hardhat-deploy scripts (00, 01, 02)
-│   │   └── test/                               # Contract tests (Marketplace, Registry)
+│   │   ├── contracts/                          # DeadMansSwitch, WhistleblowerRegistry, Marketplace,
+│   │   │                                       #   IReclaim, mocks/MockReclaim
+│   │   ├── deploy/                             # hardhat-deploy scripts (00 mock, 01 registry, 02 marketplace)
+│   │   └── test/                               # Contract tests (DeadMansSwitch, Marketplace, Registry)
 │   └── nextjs/
 │       ├── app/                                # Routes: /, /vault, /identity, /marketplace
 │       ├── components/zk-whistle/              # Vault / identity / marketplace UI
@@ -176,7 +190,29 @@ yarn deploy
 yarn start
 ```
 
-`yarn deploy` regenerates [`packages/nextjs/contracts/deployedContracts.ts`](packages/nextjs/contracts/deployedContracts.ts) so the frontend stays in sync with the ABIs.
+`yarn deploy` regenerates [`packages/nextjs/contracts/deployedContracts.ts`](packages/nextjs/contracts/deployedContracts.ts) so the frontend stays in sync with the ABIs. On local Hardhat it also deploys a `MockReclaim` and wires it into the registry so the on-chain verification path is exercisable offline.
+
+### Deploy to Base Sepolia (Lit-supported testnet)
+
+The real Lit key-gating / release flow and the real Reclaim verifier only work on a Lit-supported chain. Base Sepolia is wired in [`hardhat.config.ts`](packages/hardhat/hardhat.config.ts) and added to the frontend's `targetNetworks`.
+
+```bash
+# 1. Fund a deployer account (one-time)
+yarn generate                 # or: yarn account:import
+yarn account                  # show address; fund it with Base Sepolia ETH (faucet)
+
+# 2. (optional) enable on-chain Reclaim verification on the testnet:
+#    set RECLAIM_VERIFIER_ADDRESS=<deployed Reclaim verifier for Base Sepolia>
+#    in packages/hardhat/.env  (see https://docs.reclaimprotocol.org for the address)
+
+# 3. Deploy
+yarn deploy --network baseSepolia
+
+# 4. Run the frontend and switch the header network to Base Sepolia
+yarn start
+```
+
+**Validating the Lit round-trip:** create a vault on Base Sepolia (the wizard seals the AES key with Lit + uploads the manifest to Arweave), let the heartbeat interval elapse without checking in (or use a short interval), then open `/release`, enter the owner address, and decrypt. This exercises the `getDecryptAuthContext` → `decryptKeyFromLit` path against live Naga that local Hardhat cannot.
 
 ### Environment variables
 
@@ -232,9 +268,10 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - ✅ **Vault wizard wired to the real pipeline** — AES encrypt → Lit seals the AES key under the `isDeceased()` ACC → self-describing manifest uploaded to Arweave (Irys) → `createSwitch` stores the real Arweave TX id + `dataToEncryptHash`. Placeholders removed. Falls back to `local-preview` on non-Lit chains (see Lit network requirement).
 - ✅ **`Marketplace` reads `isVerified` from the registry** — `createListing` no longer takes a self-asserted flag; the marketplace is constructed with the registry address and queries `registry.isVerified(msg.sender)`.
 - ✅ **`WhistleblowerRegistry` hardened** — now `Ownable` with `attestVerification` (owner/verifier path) and an explicit `autoVerifyOnSubmit` dev flag (documented above), instead of unconditional trust-on-submit.
+- ✅ **On-chain Reclaim verification wired** — `submitVerifiedProof(Proof)` verifies witness signatures via a deployed Reclaim verifier and marks the proof's `owner` verified (replay-safe). Local dev uses a `MockReclaim`; live networks use `RECLAIM_VERIFIER_ADDRESS`. The identity UI auto-selects the on-chain path when a verifier is configured.
 - ✅ **Lit SDK aligned to v8 (Naga)** — migrated off the sunset v7/Datil stack to `@lit-protocol/lit-client` + `networks` + `auth`; network/chain support is centralized and the unsupported-chain case is handled.
 - ✅ **Reclaim app secret moved server-side** — proof initialization runs in `app/api/reclaim/route.ts` (allow-listed provider, per-IP rate limit, generic errors); the client only ever sees a serialized request config.
-- ⚠️ **On-chain Reclaim proof verification is not implemented** — verification is currently an off-chain/owner attestation (see trust model above).
+- ⚠️ **On-chain Reclaim verification needs a live verifier** — the path is implemented and tested against a `MockReclaim`, but validating against the **real** deployed Reclaim verifier requires setting `RECLAIM_VERIFIER_ADDRESS` for the target chain and a live proof.
 - ⚠️ **Lit decrypt/release flow is not yet wired into any UI** — `decryptKeyFromLit` + `getDecryptAuthContext` follow the documented v8 `AuthManager` pattern but have not been exercised against a live Naga deployment.
 - ✅ `DeadMansSwitch` now has a full test suite, and the `Marketplace` carries OpenZeppelin `ReentrancyGuard` on `placeBid`/`acceptBid`/`withdrawBid` (in addition to checks-effects-interactions).
 - ⚠️ The `/vault/create` route ships the full Lit v8 client (~2.4 MB first load); consider lazy-loading the Lit service if bundle size matters.
@@ -246,10 +283,10 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - [x] Align Lit SDK package versions (migrated to v8 / Naga); reconcile target network naming.
 - [x] Harden the registry trust model (owner attestation + documented `autoVerifyOnSubmit`).
 - [x] Move Reclaim secret + proof initialization to a server route.
-- [ ] Add on-chain Reclaim proof verification (or formalize the off-chain attestation trust assumption).
+- [x] Add on-chain Reclaim proof verification (`submitVerifiedProof` + deployed-verifier wiring; tested with `MockReclaim`). _Validate against the real Reclaim verifier on a testnet next._
 - [x] Build the release/decrypt UI (`/release`: status lookup → Arweave fetch → Lit `authContext` decrypt → AES decrypt → download). _Live `authContext` validation against Naga still pending a testnet deploy._
 - [x] Add `ReentrancyGuard` + a full `DeadMansSwitch` test suite.
-- [ ] Deploy to a Lit-supported testnet (e.g. Base Sepolia) and validate the end-to-end release.
+- [~] Deploy to a Lit-supported testnet (e.g. Base Sepolia) — config/tooling/docs ready (`hardhat.config.ts` + frontend `targetNetworks` + deploy guide above); the broadcast needs a funded deployer key. Validate the end-to-end Lit release after deploying.
 - [ ] Future work from the thesis: duress "kill switch", ZK-Email provenance, gasless `checkIn()` via relayer, cross-chain triggers.
 
 ---

@@ -1,6 +1,17 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { WhistleblowerRegistry } from "../typechain-types";
+import { MockReclaim, WhistleblowerRegistry } from "../typechain-types";
+
+/** Build a Reclaim on-chain Proof struct (shape matches transformForOnchain output). */
+function buildProof(identifier: string, owner: string) {
+  return {
+    claimInfo: { provider: "http", parameters: "{}", context: "" },
+    signedClaim: {
+      claim: { identifier, owner, timestampS: 0, epoch: 1 },
+      signatures: ["0x1234"],
+    },
+  };
+}
 
 describe("WhistleblowerRegistry", function () {
   let registry: WhistleblowerRegistry;
@@ -183,6 +194,103 @@ describe("WhistleblowerRegistry", function () {
       await expect(registry.connect(user2).setAutoVerifyOnSubmit(false)).to.be.revertedWithCustomError(
         registry,
         "OwnableUnauthorizedAccount",
+      );
+    });
+  });
+
+  describe("setReclaimVerifier", function () {
+    let mock: MockReclaim;
+
+    beforeEach(async () => {
+      const mockFactory = await ethers.getContractFactory("MockReclaim");
+      mock = (await mockFactory.deploy()) as MockReclaim;
+      await mock.waitForDeployment();
+    });
+
+    it("Should let the owner set the verifier", async function () {
+      const addr = await mock.getAddress();
+      await expect(registry.setReclaimVerifier(addr)).to.emit(registry, "ReclaimVerifierUpdated").withArgs(addr);
+      expect(await registry.reclaimVerifier()).to.equal(addr);
+    });
+
+    it("Should reject setting the verifier from a non-owner", async function () {
+      await expect(registry.connect(user2).setReclaimVerifier(await mock.getAddress())).to.be.revertedWithCustomError(
+        registry,
+        "OwnableUnauthorizedAccount",
+      );
+    });
+  });
+
+  describe("submitVerifiedProof (on-chain verification)", function () {
+    let mock: MockReclaim;
+    const IDENTIFIER = ethers.keccak256(ethers.toUtf8Bytes("onchain_proof_1"));
+
+    beforeEach(async () => {
+      const mockFactory = await ethers.getContractFactory("MockReclaim");
+      mock = (await mockFactory.deploy()) as MockReclaim;
+      await mock.waitForDeployment();
+      // Auto-verify OFF to prove the cryptographic path is independent.
+      await registry.setAutoVerifyOnSubmit(false);
+      await registry.setReclaimVerifier(await mock.getAddress());
+    });
+
+    it("Should reject when no verifier is configured", async function () {
+      const freshFactory = await ethers.getContractFactory("WhistleblowerRegistry");
+      const fresh = (await freshFactory.deploy(false)) as WhistleblowerRegistry;
+      await fresh.waitForDeployment();
+      await expect(fresh.submitVerifiedProof(buildProof(IDENTIFIER, user1.address))).to.be.revertedWith(
+        "Verifier not configured",
+      );
+    });
+
+    it("Should verify the proof owner and store the identifier", async function () {
+      await registry.submitVerifiedProof(buildProof(IDENTIFIER, user1.address));
+      expect(await registry.isVerified(user1.address)).to.be.true;
+      const hashes = await registry.getProofHashes(user1.address);
+      expect(hashes).to.deep.equal([IDENTIFIER]);
+    });
+
+    it("Should emit ProofVerifiedOnChain and VerificationUpdated", async function () {
+      await expect(registry.submitVerifiedProof(buildProof(IDENTIFIER, user1.address)))
+        .to.emit(registry, "ProofVerifiedOnChain")
+        .withArgs(user1.address, IDENTIFIER)
+        .and.to.emit(registry, "VerificationUpdated")
+        .withArgs(user1.address, true);
+    });
+
+    it("Should accrue verification to the proof owner, not the relayer", async function () {
+      // user1 relays a proof issued to user2.
+      await registry.connect(user1).submitVerifiedProof(buildProof(IDENTIFIER, user2.address));
+      expect(await registry.isVerified(user2.address)).to.be.true;
+      expect(await registry.isVerified(user1.address)).to.be.false;
+    });
+
+    it("Should revert when the verifier rejects the proof", async function () {
+      await mock.setShouldPass(false);
+      await expect(registry.submitVerifiedProof(buildProof(IDENTIFIER, user1.address))).to.be.revertedWith(
+        "MockReclaim: invalid proof",
+      );
+      // Nothing recorded on failure.
+      expect(await registry.isVerified(user1.address)).to.be.false;
+      expect(await registry.proofHashExists(IDENTIFIER)).to.be.false;
+    });
+
+    it("Should reject a zero identifier", async function () {
+      await expect(registry.submitVerifiedProof(buildProof(ethers.ZeroHash, user1.address))).to.be.revertedWith(
+        "Invalid proof identifier",
+      );
+    });
+
+    it("Should reject a zero owner", async function () {
+      await expect(registry.submitVerifiedProof(buildProof(IDENTIFIER, ethers.ZeroAddress))).to.be.revertedWith(
+        "Invalid proof owner",
+      );
+    });
+
+    it("Should reject a duplicate proof identifier", async function () {
+      await registry.submitVerifiedProof(buildProof(IDENTIFIER, user1.address));
+      await expect(registry.submitVerifiedProof(buildProof(IDENTIFIER, user2.address))).to.be.revertedWith(
+        "Proof already submitted",
       );
     });
   });

@@ -2,6 +2,7 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { IReclaim, ReclaimTypes } from "./IReclaim.sol";
 
 /**
  * @title WhistleblowerRegistry
@@ -12,18 +13,19 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * @dev Only proof hashes (bytes32) are stored on-chain. The full Reclaim JSON
  * proof lives off-chain (IPFS/Arweave) and is verified off-chain.
  *
- * Trust model for `isVerified`:
- * The EVM cannot (cheaply) re-run a Reclaim zkTLS proof, so on-chain code cannot
- * by itself prove that a submitted `proofHash` corresponds to a valid proof.
- * Two verification modes are therefore supported:
- *   1. Attested mode (recommended for production): an authorized verifier — the
- *      contract owner, representing an off-chain validator or a Lit Action that
- *      actually checks the Reclaim witness signatures — calls
- *      {attestVerification}. `isVerified` reflects that explicit attestation.
- *   2. Trust-on-submit mode (development/demo convenience): when
- *      {autoVerifyOnSubmit} is enabled, a user is marked verified as soon as
- *      they record any proof hash. This is NOT a cryptographic guarantee and
- *      should be disabled in production.
+ * Trust model for `isVerified`, strongest to weakest:
+ *   1. On-chain verified (trustless): {submitVerifiedProof} passes the full
+ *      Reclaim proof to a deployed Reclaim verifier ({reclaimVerifier}) which
+ *      checks the witness signatures on-chain. Verification accrues to the
+ *      proof's `owner` (the address the proof was issued to), so a valid proof
+ *      cannot be replayed to verify a different account. This is the production
+ *      path and gives `isVerified` cryptographic meaning with no trusted party.
+ *   2. Attested mode: an authorized verifier (the contract owner, representing an
+ *      off-chain validator or a Lit Action) calls {attestVerification}. Useful
+ *      where a verifier isn't deployed for the chain/provider.
+ *   3. Trust-on-submit mode (dev/demo only): when {autoVerifyOnSubmit} is
+ *      enabled, {submitProofHash} marks the caller verified on first hash. NOT a
+ *      cryptographic guarantee — disable in production.
  */
 contract WhistleblowerRegistry is Ownable {
     // -------------------------------------------------------
@@ -54,6 +56,11 @@ contract WhistleblowerRegistry is Ownable {
     /// verified without an explicit attestation. Convenience for dev/demo only.
     bool public autoVerifyOnSubmit;
 
+    /// @notice Deployed Reclaim verifier used by {submitVerifiedProof}. When the
+    /// zero address, on-chain proof verification is disabled (fall back to
+    /// attestation / trust-on-submit).
+    IReclaim public reclaimVerifier;
+
     // -------------------------------------------------------
     // Events
     // -------------------------------------------------------
@@ -65,6 +72,10 @@ contract WhistleblowerRegistry is Ownable {
     event StealthMetaAddressUpdated(address indexed user);
 
     event AutoVerifyConfigured(bool enabled);
+
+    event ReclaimVerifierUpdated(address indexed verifier);
+
+    event ProofVerifiedOnChain(address indexed subject, bytes32 indexed identifier);
 
     // -------------------------------------------------------
     // Constructor
@@ -104,6 +115,53 @@ contract WhistleblowerRegistry is Ownable {
         }
 
         emit ProofSubmitted(msg.sender, _proofHash, block.timestamp);
+    }
+
+    /**
+     * @notice Submit a full Reclaim proof for trustless, on-chain verification.
+     * The proof's witness signatures are checked by the deployed Reclaim verifier;
+     * if they pass, the proof's `owner` is marked verified and the claim identifier
+     * is recorded. Verification accrues to `proof.signedClaim.claim.owner` (not the
+     * caller) so a valid proof cannot be replayed to verify a different account, and
+     * so it can be relayed (e.g. via a gasless sponsor) on the owner's behalf.
+     * @param proof The Reclaim proof, as produced by the JS SDK's `transformForOnchain`.
+     */
+    function submitVerifiedProof(ReclaimTypes.Proof calldata proof) external {
+        require(address(reclaimVerifier) != address(0), "Verifier not configured");
+
+        bytes32 identifier = proof.signedClaim.claim.identifier;
+        address subject = proof.signedClaim.claim.owner;
+        require(identifier != bytes32(0), "Invalid proof identifier");
+        require(subject != address(0), "Invalid proof owner");
+        require(!proofHashExists[identifier], "Proof already submitted");
+
+        // Reverts if the witness signatures are invalid or below threshold.
+        reclaimVerifier.verifyProof(proof);
+
+        _ensureRegistered(subject);
+
+        profiles[subject].proofHashes.push(identifier);
+        proofHashExists[identifier] = true;
+
+        // Cryptographically backed: independent of autoVerifyOnSubmit.
+        if (!profiles[subject].isVerified) {
+            profiles[subject].isVerified = true;
+            emit VerificationUpdated(subject, true);
+        }
+
+        emit ProofSubmitted(subject, identifier, block.timestamp);
+        emit ProofVerifiedOnChain(subject, identifier);
+    }
+
+    /**
+     * @notice Set (or clear) the deployed Reclaim verifier address.
+     * @dev Owner-only. Set to a valid verifier on chains/providers Reclaim supports;
+     * leave as the zero address to disable the on-chain verification path.
+     * @param _verifier Address of the Reclaim verifier contract (or address(0)).
+     */
+    function setReclaimVerifier(address _verifier) external onlyOwner {
+        reclaimVerifier = IReclaim(_verifier);
+        emit ReclaimVerifierUpdated(_verifier);
     }
 
     /**

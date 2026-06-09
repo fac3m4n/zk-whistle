@@ -1,0 +1,808 @@
+{
+  "address": "0x0Bed551ed8ab18094b9B09eEc9C1560e739dcAb1",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_feeRecipient",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_registry",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bidIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "stealthAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "BidAccepted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bidIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "bidder",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "BidPlaced",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "bidIndex",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "bidder",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "BidWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "whistleblower",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "descriptionHash",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "minimumBid",
+          "type": "uint256"
+        }
+      ],
+      "name": "ListingCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "listingId",
+          "type": "uint256"
+        }
+      ],
+      "name": "ListingDeactivated",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "PLATFORM_FEE_BPS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_bidIndex",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address payable",
+          "name": "_stealthAddress",
+          "type": "address"
+        }
+      ],
+      "name": "acceptBid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "bids",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "bidder",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isAccepted",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "isWithdrawn",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_descriptionHash",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_minimumBid",
+          "type": "uint256"
+        }
+      ],
+      "name": "createListing",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        }
+      ],
+      "name": "deactivateListing",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "feeRecipient",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_bidIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBid",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "bidder",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isAccepted",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "isWithdrawn",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        }
+      ],
+      "name": "getListing",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "whistleblower",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "descriptionHash",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minimumBid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "isVerified",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "bidCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "listingCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "listings",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "whistleblower",
+          "type": "address"
+        },
+        {
+          "internalType": "string",
+          "name": "descriptionHash",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "arweaveTxId",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "minimumBid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "isVerified",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "bidCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        }
+      ],
+      "name": "placeBid",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "registry",
+      "outputs": [
+        {
+          "internalType": "contract IWhistleblowerRegistry",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_listingId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_bidIndex",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawBid",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x126102b4d5d07f65262bf23a9fc580fae7fd8c63b487fe80da94d789fd6738dd",
+  "receipt": {
+    "to": null,
+    "from": "0x4b7866e717f27Fa1C38313D25F647aE0598571BD",
+    "contractAddress": "0x0Bed551ed8ab18094b9B09eEc9C1560e739dcAb1",
+    "transactionIndex": 12,
+    "gasUsed": "1338219",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "transactionHash": "0x126102b4d5d07f65262bf23a9fc580fae7fd8c63b487fe80da94d789fd6738dd",
+    "logs": [],
+    "blockNumber": 42625048,
+    "cumulativeGasUsed": "6092412",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x4b7866e717f27Fa1C38313D25F647aE0598571BD",
+    "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "6fe9d2f6dce9e990ddbfc69dea4cf745",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.30+commit.73712a01\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_feeRecipient\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_registry\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"ReentrancyGuardReentrantCall\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"bidIndex\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"stealthAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BidAccepted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"bidIndex\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"bidder\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BidPlaced\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"bidIndex\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"bidder\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"BidWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"whistleblower\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"descriptionHash\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"minimumBid\",\"type\":\"uint256\"}],\"name\":\"ListingCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"listingId\",\"type\":\"uint256\"}],\"name\":\"ListingDeactivated\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"PLATFORM_FEE_BPS\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_bidIndex\",\"type\":\"uint256\"},{\"internalType\":\"address payable\",\"name\":\"_stealthAddress\",\"type\":\"address\"}],\"name\":\"acceptBid\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"bids\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"bidder\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isAccepted\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isWithdrawn\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"_descriptionHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"_arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"_minimumBid\",\"type\":\"uint256\"}],\"name\":\"createListing\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"deactivateListing\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feeRecipient\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_bidIndex\",\"type\":\"uint256\"}],\"name\":\"getBid\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"bidder\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isAccepted\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isWithdrawn\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"getListing\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"whistleblower\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"descriptionHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"minimumBid\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVerified\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"createdAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bidCount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"listingCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"listings\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"whistleblower\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"descriptionHash\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"arweaveTxId\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"minimumBid\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"isActive\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"isVerified\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"createdAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"bidCount\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"}],\"name\":\"placeBid\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"registry\",\"outputs\":[{\"internalType\":\"contract IWhistleblowerRegistry\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_listingId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_bidIndex\",\"type\":\"uint256\"}],\"name\":\"withdrawBid\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"details\":\"No plaintext data is stored. Only description hashes, Arweave TX IDs (pointing to encrypted payloads), and payment state are kept on-chain. Fund-moving functions follow checks-effects-interactions and are additionally protected with {ReentrancyGuard} as defense-in-depth.\",\"errors\":{\"ReentrancyGuardReentrantCall()\":[{\"details\":\"Unauthorized reentrant call.\"}]},\"kind\":\"dev\",\"methods\":{\"acceptBid(uint256,uint256,address)\":{\"params\":{\"_bidIndex\":\"Index of the bid to accept.\",\"_listingId\":\"ID of the listing.\",\"_stealthAddress\":\"ERC-5564 stealth address for anonymous payment.\"}},\"constructor\":{\"params\":{\"_feeRecipient\":\"Address that receives platform fees.\",\"_registry\":\"WhistleblowerRegistry used to determine verified status.\"}},\"createListing(string,string,uint256)\":{\"details\":\"The verified flag is read from the registry for the caller and cannot be      self-asserted, so a \\\"Verified Source\\\" badge always reflects on-chain reputation.\",\"params\":{\"_arweaveTxId\":\"Arweave TX ID of the encrypted payload.\",\"_descriptionHash\":\"IPFS/Arweave hash of the encrypted description.\",\"_minimumBid\":\"Minimum bid amount in wei.\"}},\"deactivateListing(uint256)\":{\"params\":{\"_listingId\":\"ID of the listing to deactivate.\"}},\"getBid(uint256,uint256)\":{\"params\":{\"_bidIndex\":\"Index of the bid.\",\"_listingId\":\"ID of the listing.\"}},\"getListing(uint256)\":{\"params\":{\"_listingId\":\"ID of the listing.\"}},\"placeBid(uint256)\":{\"params\":{\"_listingId\":\"ID of the listing to bid on.\"}},\"withdrawBid(uint256,uint256)\":{\"params\":{\"_bidIndex\":\"Index of the bid to withdraw.\",\"_listingId\":\"ID of the listing.\"}}},\"title\":\"Marketplace\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"PLATFORM_FEE_BPS()\":{\"notice\":\"Platform fee in basis points (e.g. 250 = 2.5%)\"},\"acceptBid(uint256,uint256,address)\":{\"notice\":\"Accept a bid and release funds to the whistleblower's stealth address. A platform fee is deducted and sent to the fee recipient.\"},\"createListing(string,string,uint256)\":{\"notice\":\"Create a new listing for encrypted information.\"},\"deactivateListing(uint256)\":{\"notice\":\"Deactivate a listing. Only the whistleblower can deactivate.\"},\"getBid(uint256,uint256)\":{\"notice\":\"Get bid details.\"},\"getListing(uint256)\":{\"notice\":\"Get listing details.\"},\"placeBid(uint256)\":{\"notice\":\"Place a bid on a listing. Funds are held in escrow.\"},\"registry()\":{\"notice\":\"Registry consulted for a whistleblower's verified (credibility) status.\"},\"withdrawBid(uint256,uint256)\":{\"notice\":\"Withdraw an unaccepted bid. Only the original bidder can withdraw.\"}},\"notice\":\"Anonymous information marketplace where whistleblowers list encrypted data and journalists place bids. When a bid is accepted, funds are sent to an ERC-5564 stealth address to break the on-chain link between payer and receiver.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Marketplace.sol\":\"Marketplace\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"@openzeppelin/contracts/utils/ReentrancyGuard.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\n// OpenZeppelin Contracts (last updated v5.0.0) (utils/ReentrancyGuard.sol)\\n\\npragma solidity ^0.8.20;\\n\\n/**\\n * @dev Contract module that helps prevent reentrant calls to a function.\\n *\\n * Inheriting from `ReentrancyGuard` will make the {nonReentrant} modifier\\n * available, which can be applied to functions to make sure there are no nested\\n * (reentrant) calls to them.\\n *\\n * Note that because there is a single `nonReentrant` guard, functions marked as\\n * `nonReentrant` may not call one another. This can be worked around by making\\n * those functions `private`, and then adding `external` `nonReentrant` entry\\n * points to them.\\n *\\n * TIP: If you would like to learn more about reentrancy and alternative ways\\n * to protect against it, check out our blog post\\n * https://blog.openzeppelin.com/reentrancy-after-istanbul/[Reentrancy After Istanbul].\\n */\\nabstract contract ReentrancyGuard {\\n    // Booleans are more expensive than uint256 or any type that takes up a full\\n    // word because each write operation emits an extra SLOAD to first read the\\n    // slot's contents, replace the bits taken up by the boolean, and then write\\n    // back. This is the compiler's defense against contract upgrades and\\n    // pointer aliasing, and it cannot be disabled.\\n\\n    // The values being non-zero value makes deployment a bit more expensive,\\n    // but in exchange the refund on every call to nonReentrant will be lower in\\n    // amount. Since refunds are capped to a percentage of the total\\n    // transaction's gas, it is best to keep them low in cases like this one, to\\n    // increase the likelihood of the full refund coming into effect.\\n    uint256 private constant NOT_ENTERED = 1;\\n    uint256 private constant ENTERED = 2;\\n\\n    uint256 private _status;\\n\\n    /**\\n     * @dev Unauthorized reentrant call.\\n     */\\n    error ReentrancyGuardReentrantCall();\\n\\n    constructor() {\\n        _status = NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Prevents a contract from calling itself, directly or indirectly.\\n     * Calling a `nonReentrant` function from another `nonReentrant`\\n     * function is not supported. It is possible to prevent this from happening\\n     * by making the `nonReentrant` function external, and making it call a\\n     * `private` function that does the actual work.\\n     */\\n    modifier nonReentrant() {\\n        _nonReentrantBefore();\\n        _;\\n        _nonReentrantAfter();\\n    }\\n\\n    function _nonReentrantBefore() private {\\n        // On the first call to nonReentrant, _status will be NOT_ENTERED\\n        if (_status == ENTERED) {\\n            revert ReentrancyGuardReentrantCall();\\n        }\\n\\n        // Any calls to nonReentrant after this point will fail\\n        _status = ENTERED;\\n    }\\n\\n    function _nonReentrantAfter() private {\\n        // By storing the original value once again, a refund is triggered (see\\n        // https://eips.ethereum.org/EIPS/eip-2200)\\n        _status = NOT_ENTERED;\\n    }\\n\\n    /**\\n     * @dev Returns true if the reentrancy guard is currently set to \\\"entered\\\", which indicates there is a\\n     * `nonReentrant` function in the call stack.\\n     */\\n    function _reentrancyGuardEntered() internal view returns (bool) {\\n        return _status == ENTERED;\\n    }\\n}\\n\",\"keccak256\":\"0xf980daa263b661ab8ddee7d4fd833c7da7e7995e2c359ff1f17e67e4112f2236\",\"license\":\"MIT\"},\"contracts/Marketplace.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\npragma solidity >=0.8.0 <0.9.0;\\n\\nimport { ReentrancyGuard } from \\\"@openzeppelin/contracts/utils/ReentrancyGuard.sol\\\";\\n\\n/**\\n * @notice Minimal view into the WhistleblowerRegistry used to source verified status.\\n */\\ninterface IWhistleblowerRegistry {\\n    function isVerified(address user) external view returns (bool);\\n}\\n\\n/**\\n * @title Marketplace\\n * @notice Anonymous information marketplace where whistleblowers list encrypted\\n * data and journalists place bids. When a bid is accepted, funds are sent\\n * to an ERC-5564 stealth address to break the on-chain link between\\n * payer and receiver.\\n * @dev No plaintext data is stored. Only description hashes, Arweave TX IDs\\n * (pointing to encrypted payloads), and payment state are kept on-chain.\\n * Fund-moving functions follow checks-effects-interactions and are additionally\\n * protected with {ReentrancyGuard} as defense-in-depth.\\n */\\ncontract Marketplace is ReentrancyGuard {\\n    // -------------------------------------------------------\\n    // Types\\n    // -------------------------------------------------------\\n\\n    struct Listing {\\n        address whistleblower;\\n        string descriptionHash; // IPFS/Arweave CID of encrypted description\\n        string arweaveTxId; // Arweave TX ID of the encrypted payload\\n        uint256 minimumBid;\\n        bool isActive;\\n        bool isVerified; // mirrors WhistleblowerRegistry verified status\\n        uint256 createdAt;\\n        uint256 bidCount;\\n    }\\n\\n    struct Bid {\\n        address bidder;\\n        uint256 amount;\\n        bool isAccepted;\\n        bool isWithdrawn;\\n    }\\n\\n    // -------------------------------------------------------\\n    // State\\n    // -------------------------------------------------------\\n\\n    uint256 public listingCount;\\n    mapping(uint256 => Listing) public listings;\\n    mapping(uint256 => mapping(uint256 => Bid)) public bids;\\n\\n    /// @notice Platform fee in basis points (e.g. 250 = 2.5%)\\n    uint256 public constant PLATFORM_FEE_BPS = 250;\\n    address public immutable feeRecipient;\\n\\n    /// @notice Registry consulted for a whistleblower's verified (credibility) status.\\n    IWhistleblowerRegistry public immutable registry;\\n\\n    // -------------------------------------------------------\\n    // Events\\n    // -------------------------------------------------------\\n\\n    event ListingCreated(\\n        uint256 indexed listingId,\\n        address indexed whistleblower,\\n        string descriptionHash,\\n        uint256 minimumBid\\n    );\\n\\n    event ListingDeactivated(uint256 indexed listingId);\\n\\n    event BidPlaced(uint256 indexed listingId, uint256 indexed bidIndex, address indexed bidder, uint256 amount);\\n\\n    event BidAccepted(uint256 indexed listingId, uint256 indexed bidIndex, address stealthAddress, uint256 amount);\\n\\n    event BidWithdrawn(uint256 indexed listingId, uint256 indexed bidIndex, address indexed bidder, uint256 amount);\\n\\n    // -------------------------------------------------------\\n    // Constructor\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @param _feeRecipient Address that receives platform fees.\\n     * @param _registry WhistleblowerRegistry used to determine verified status.\\n     */\\n    constructor(address _feeRecipient, address _registry) {\\n        require(_feeRecipient != address(0), \\\"Invalid fee recipient\\\");\\n        require(_registry != address(0), \\\"Invalid registry\\\");\\n        feeRecipient = _feeRecipient;\\n        registry = IWhistleblowerRegistry(_registry);\\n    }\\n\\n    // -------------------------------------------------------\\n    // Write Functions\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Create a new listing for encrypted information.\\n     * @dev The verified flag is read from the registry for the caller and cannot be\\n     *      self-asserted, so a \\\"Verified Source\\\" badge always reflects on-chain reputation.\\n     * @param _descriptionHash IPFS/Arweave hash of the encrypted description.\\n     * @param _arweaveTxId Arweave TX ID of the encrypted payload.\\n     * @param _minimumBid Minimum bid amount in wei.\\n     */\\n    function createListing(\\n        string calldata _descriptionHash,\\n        string calldata _arweaveTxId,\\n        uint256 _minimumBid\\n    ) external returns (uint256) {\\n        require(bytes(_descriptionHash).length > 0, \\\"Description hash required\\\");\\n        require(bytes(_arweaveTxId).length > 0, \\\"Arweave TX ID required\\\");\\n\\n        uint256 listingId = listingCount;\\n        listings[listingId] = Listing({\\n            whistleblower: msg.sender,\\n            descriptionHash: _descriptionHash,\\n            arweaveTxId: _arweaveTxId,\\n            minimumBid: _minimumBid,\\n            isActive: true,\\n            isVerified: registry.isVerified(msg.sender),\\n            createdAt: block.timestamp,\\n            bidCount: 0\\n        });\\n\\n        listingCount++;\\n\\n        emit ListingCreated(listingId, msg.sender, _descriptionHash, _minimumBid);\\n        return listingId;\\n    }\\n\\n    /**\\n     * @notice Deactivate a listing. Only the whistleblower can deactivate.\\n     * @param _listingId ID of the listing to deactivate.\\n     */\\n    function deactivateListing(uint256 _listingId) external {\\n        Listing storage listing = listings[_listingId];\\n        require(listing.whistleblower == msg.sender, \\\"Not listing owner\\\");\\n        require(listing.isActive, \\\"Already inactive\\\");\\n\\n        listing.isActive = false;\\n        emit ListingDeactivated(_listingId);\\n    }\\n\\n    /**\\n     * @notice Place a bid on a listing. Funds are held in escrow.\\n     * @param _listingId ID of the listing to bid on.\\n     */\\n    function placeBid(uint256 _listingId) external payable nonReentrant {\\n        Listing storage listing = listings[_listingId];\\n        require(listing.isActive, \\\"Listing not active\\\");\\n        require(msg.value >= listing.minimumBid, \\\"Bid below minimum\\\");\\n        require(msg.sender != listing.whistleblower, \\\"Cannot bid on own listing\\\");\\n\\n        uint256 bidIndex = listing.bidCount;\\n        bids[_listingId][bidIndex] = Bid({\\n            bidder: msg.sender,\\n            amount: msg.value,\\n            isAccepted: false,\\n            isWithdrawn: false\\n        });\\n\\n        listing.bidCount++;\\n\\n        emit BidPlaced(_listingId, bidIndex, msg.sender, msg.value);\\n    }\\n\\n    /**\\n     * @notice Accept a bid and release funds to the whistleblower's stealth address.\\n     * A platform fee is deducted and sent to the fee recipient.\\n     * @param _listingId ID of the listing.\\n     * @param _bidIndex Index of the bid to accept.\\n     * @param _stealthAddress ERC-5564 stealth address for anonymous payment.\\n     */\\n    function acceptBid(uint256 _listingId, uint256 _bidIndex, address payable _stealthAddress) external nonReentrant {\\n        Listing storage listing = listings[_listingId];\\n        require(listing.whistleblower == msg.sender, \\\"Not listing owner\\\");\\n        require(listing.isActive, \\\"Listing not active\\\");\\n\\n        Bid storage bid = bids[_listingId][_bidIndex];\\n        require(!bid.isAccepted, \\\"Bid already accepted\\\");\\n        require(!bid.isWithdrawn, \\\"Bid was withdrawn\\\");\\n        require(bid.amount > 0, \\\"Invalid bid\\\");\\n        require(_stealthAddress != address(0), \\\"Invalid stealth address\\\");\\n\\n        bid.isAccepted = true;\\n        listing.isActive = false;\\n\\n        // Calculate and transfer fees\\n        uint256 fee = (bid.amount * PLATFORM_FEE_BPS) / 10000;\\n        uint256 payout = bid.amount - fee;\\n\\n        (bool feeSuccess, ) = feeRecipient.call{ value: fee }(\\\"\\\");\\n        require(feeSuccess, \\\"Fee transfer failed\\\");\\n\\n        (bool payoutSuccess, ) = _stealthAddress.call{ value: payout }(\\\"\\\");\\n        require(payoutSuccess, \\\"Payout transfer failed\\\");\\n\\n        emit BidAccepted(_listingId, _bidIndex, _stealthAddress, payout);\\n    }\\n\\n    /**\\n     * @notice Withdraw an unaccepted bid. Only the original bidder can withdraw.\\n     * @param _listingId ID of the listing.\\n     * @param _bidIndex Index of the bid to withdraw.\\n     */\\n    function withdrawBid(uint256 _listingId, uint256 _bidIndex) external nonReentrant {\\n        Bid storage bid = bids[_listingId][_bidIndex];\\n        require(bid.bidder == msg.sender, \\\"Not bid owner\\\");\\n        require(!bid.isAccepted, \\\"Bid already accepted\\\");\\n        require(!bid.isWithdrawn, \\\"Already withdrawn\\\");\\n        require(bid.amount > 0, \\\"Invalid bid\\\");\\n\\n        bid.isWithdrawn = true;\\n        uint256 refundAmount = bid.amount;\\n\\n        (bool success, ) = msg.sender.call{ value: refundAmount }(\\\"\\\");\\n        require(success, \\\"Refund failed\\\");\\n\\n        emit BidWithdrawn(_listingId, _bidIndex, msg.sender, refundAmount);\\n    }\\n\\n    // -------------------------------------------------------\\n    // Read Functions\\n    // -------------------------------------------------------\\n\\n    /**\\n     * @notice Get listing details.\\n     * @param _listingId ID of the listing.\\n     */\\n    function getListing(\\n        uint256 _listingId\\n    )\\n        external\\n        view\\n        returns (\\n            address whistleblower,\\n            string memory descriptionHash,\\n            string memory arweaveTxId,\\n            uint256 minimumBid,\\n            bool isActive,\\n            bool isVerified,\\n            uint256 createdAt,\\n            uint256 bidCount\\n        )\\n    {\\n        Listing storage l = listings[_listingId];\\n        return (\\n            l.whistleblower,\\n            l.descriptionHash,\\n            l.arweaveTxId,\\n            l.minimumBid,\\n            l.isActive,\\n            l.isVerified,\\n            l.createdAt,\\n            l.bidCount\\n        );\\n    }\\n\\n    /**\\n     * @notice Get bid details.\\n     * @param _listingId ID of the listing.\\n     * @param _bidIndex Index of the bid.\\n     */\\n    function getBid(\\n        uint256 _listingId,\\n        uint256 _bidIndex\\n    ) external view returns (address bidder, uint256 amount, bool isAccepted, bool isWithdrawn) {\\n        Bid storage b = bids[_listingId][_bidIndex];\\n        return (b.bidder, b.amount, b.isAccepted, b.isWithdrawn);\\n    }\\n}\\n\",\"keccak256\":\"0xdee915ac3c0a7d5f436a0c3a4f7319cf5c9ef22f4ec9ad7c96320f9673045e41\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60c060405234801561001057600080fd5b5060405161183238038061183283398101604081905261002f9161010b565b60016000556001600160a01b03821661008f5760405162461bcd60e51b815260206004820152601560248201527f496e76616c69642066656520726563697069656e74000000000000000000000060448201526064015b60405180910390fd5b6001600160a01b0381166100d85760405162461bcd60e51b815260206004820152601060248201526f496e76616c696420726567697374727960801b6044820152606401610086565b6001600160a01b039182166080521660a05261013e565b80516001600160a01b038116811461010657600080fd5b919050565b6000806040838503121561011e57600080fd5b610127836100ef565b9150610135602084016100ef565b90509250929050565b60805160a0516116c1610171600039600081816102550152610718015260008181610166015261108a01526116c16000f3fe6080604052600436106100c25760003560e01c80637b1039991161007f578063a573566211610059578063a5735662146102e7578063a9b07c2614610307578063de74e57b1461031d578063def5e7371461033d57600080fd5b80637b103999146102435780637b3c4baa146102775780639979ef45146102d457600080fd5b8063107a274a146100c75780633b8d915f146101045780634652c3e2146101265780634690484014610154578063539aa77f146101a0578063582c7ffd146101b5575b600080fd5b3480156100d357600080fd5b506100e76100e2366004611260565b61035d565b6040516100fb9897969594939291906112bf565b60405180910390f35b34801561011057600080fd5b5061012461011f366004611260565b6104ef565b005b34801561013257600080fd5b5061014661014136600461136b565b6105d1565b6040519081526020016100fb565b34801561016057600080fd5b506101887f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b0390911681526020016100fb565b3480156101ac57600080fd5b5061014660fa81565b3480156101c157600080fd5b506102116101d03660046113e4565b60009182526003602090815260408084209284529190529020805460018201546002909201546001600160a01b039091169260ff8083169261010090041690565b604080516001600160a01b039095168552602085019390935290151591830191909152151560608201526080016100fb565b34801561024f57600080fd5b506101887f000000000000000000000000000000000000000000000000000000000000000081565b34801561028357600080fd5b506102116102923660046113e4565b60036020908152600092835260408084209091529082529020805460018201546002909201546001600160a01b03909116919060ff8082169161010090041684565b6101246102e2366004611260565b6108a7565b3480156102f357600080fd5b506101246103023660046113e4565b610a9d565b34801561031357600080fd5b5061014660015481565b34801561032957600080fd5b506100e7610338366004611260565b610cd7565b34801561034957600080fd5b50610124610358366004611406565b610e3b565b600081815260026020819052604082208054600382015460048301546005840154600685015460018601805460609889988b98899889988998899894976001600160a01b03909416969395880194929360ff8084169461010090940416929087906103c79061144b565b80601f01602080910402602001604051908101604052809291908181526020018280546103f39061144b565b80156104405780601f1061041557610100808354040283529160200191610440565b820191906000526020600020905b81548152906001019060200180831161042357829003601f168201915b505050505096508580546104539061144b565b80601f016020809104026020016040519081016040528092919081815260200182805461047f9061144b565b80156104cc5780601f106104a1576101008083540402835291602001916104cc565b820191906000526020600020905b8154815290600101906020018083116104af57829003601f168201915b505050505095509850985098509850985098509850985050919395975091939597565b600081815260026020526040902080546001600160a01b0316331461054f5760405162461bcd60e51b81526020600482015260116024820152702737ba103634b9ba34b7339037bbb732b960791b60448201526064015b60405180910390fd5b600481015460ff166105965760405162461bcd60e51b815260206004820152601060248201526f416c726561647920696e61637469766560801b6044820152606401610546565b60048101805460ff1916905560405182907fe8a884965a7fb1b7c1efd55ff478bcbd880c4b226a2e2218b83d31c493964ab390600090a25050565b6000846106205760405162461bcd60e51b815260206004820152601960248201527f4465736372697074696f6e2068617368207265717569726564000000000000006044820152606401610546565b826106665760405162461bcd60e51b8152602060048201526016602482015275105c9dd9585d99481516081251081c995c5d5a5c995960521b6044820152606401610546565b600154604080516101008101825233815281516020601f8a01819004810282018101909352888152909180830191908a908a9081908401838280828437600092019190915250505090825250604080516020601f8901819004810282018101909252878152918101919088908890819084018382808284376000920191909152505050908252506020810185905260016040808301919091525163b9209e3360e01b81523360048201526060909101907f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03169063b9209e3390602401602060405180830381865afa158015610767573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061078b9190611485565b1515815242602080830191909152600060409283018190528481526002825291909120825181546001600160a01b0319166001600160a01b039091161781559082015160018201906107dd9082611512565b50604082015160028201906107f29082611512565b5060608201516003820155608082015160048201805460a085015115156101000261ff00199315159390931661ffff199091161791909117905560c0820151600582015560e09091015160069091015560018054906000610852836115e7565b9190505550336001600160a01b0316817f6b7a3194eaddce2be5200d10785a15a5cd14a78b827cf902f4d23c35e6bd73f889898760405161089593929190611600565b60405180910390a39695505050505050565b6108af611236565b6000818152600260205260409020600481015460ff166109065760405162461bcd60e51b81526020600482015260126024820152714c697374696e67206e6f742061637469766560701b6044820152606401610546565b806003015434101561094e5760405162461bcd60e51b81526020600482015260116024820152704269642062656c6f77206d696e696d756d60781b6044820152606401610546565b80546001600160a01b031633036109a75760405162461bcd60e51b815260206004820152601960248201527f43616e6e6f7420626964206f6e206f776e206c697374696e67000000000000006044820152606401610546565b600681018054604080516080810182523381523460208083019182526000838501818152606085018281528a835260038452868320888452909352948120935184546001600160a01b0319166001600160a01b0390911617845591516001840155925160029092018054935161ffff1990941692151561ff00191692909217610100931515939093029290921790558254919290610a44836115e7565b9190505550336001600160a01b031681847f6f7e354ea3ab5c288aea37fce29c603f9a98a3b040f6d8f32f10e192ec47ff6a34604051610a8691815260200190565b60405180910390a45050610a9a6001600055565b50565b610aa5611236565b6000828152600360209081526040808320848452909152902080546001600160a01b03163314610b075760405162461bcd60e51b815260206004820152600d60248201526c2737ba103134b21037bbb732b960991b6044820152606401610546565b600281015460ff1615610b535760405162461bcd60e51b8152602060048201526014602482015273109a5908185b1c9958591e481858d8d95c1d195960621b6044820152606401610546565b6002810154610100900460ff1615610ba15760405162461bcd60e51b815260206004820152601160248201527020b63932b0b23c903bb4ba34323930bbb760791b6044820152606401610546565b6000816001015411610be35760405162461bcd60e51b815260206004820152600b60248201526a125b9d985b1a5908189a5960aa1b6044820152606401610546565b60028101805461ff0019166101001790556001810154604051600090339083908381818185875af1925050503d8060008114610c3b576040519150601f19603f3d011682016040523d82523d6000602084013e610c40565b606091505b5050905080610c815760405162461bcd60e51b815260206004820152600d60248201526c1499599d5b990819985a5b1959609a1b6044820152606401610546565b336001600160a01b031684867f343dbf7cf5952b78f69fd86b25d030d987e8efb40ff3bfac7cfcad1f1bc3866685604051610cbe91815260200190565b60405180910390a4505050610cd36001600055565b5050565b600260205260009081526040902080546001820180546001600160a01b039092169291610d039061144b565b80601f0160208091040260200160405190810160405280929190818152602001828054610d2f9061144b565b8015610d7c5780601f10610d5157610100808354040283529160200191610d7c565b820191906000526020600020905b815481529060010190602001808311610d5f57829003601f168201915b505050505090806002018054610d919061144b565b80601f0160208091040260200160405190810160405280929190818152602001828054610dbd9061144b565b8015610e0a5780601f10610ddf57610100808354040283529160200191610e0a565b820191906000526020600020905b815481529060010190602001808311610ded57829003601f168201915b5050506003840154600485015460058601546006909601549495919460ff8083169550610100909204909116925088565b610e43611236565b600083815260026020526040902080546001600160a01b03163314610e9e5760405162461bcd60e51b81526020600482015260116024820152702737ba103634b9ba34b7339037bbb732b960791b6044820152606401610546565b600481015460ff16610ee75760405162461bcd60e51b81526020600482015260126024820152714c697374696e67206e6f742061637469766560701b6044820152606401610546565b60008481526003602090815260408083208684529091529020600281015460ff1615610f4c5760405162461bcd60e51b8152602060048201526014602482015273109a5908185b1c9958591e481858d8d95c1d195960621b6044820152606401610546565b6002810154610100900460ff1615610f9a5760405162461bcd60e51b81526020600482015260116024820152702134b2103bb0b9903bb4ba34323930bbb760791b6044820152606401610546565b6000816001015411610fdc5760405162461bcd60e51b815260206004820152600b60248201526a125b9d985b1a5908189a5960aa1b6044820152606401610546565b6001600160a01b0383166110325760405162461bcd60e51b815260206004820152601760248201527f496e76616c696420737465616c746820616464726573730000000000000000006044820152606401610546565b600281018054600160ff1991821681179092556004840180549091169055810154600090612710906110669060fa90611639565b6110709190611656565b905060008183600101546110849190611678565b905060007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168360405160006040518083038185875af1925050503d80600081146110f3576040519150601f19603f3d011682016040523d82523d6000602084013e6110f8565b606091505b505090508061113f5760405162461bcd60e51b8152602060048201526013602482015272119959481d1c985b9cd9995c8819985a5b1959606a1b6044820152606401610546565b6000866001600160a01b03168360405160006040518083038185875af1925050503d806000811461118c576040519150601f19603f3d011682016040523d82523d6000602084013e611191565b606091505b50509050806111db5760405162461bcd60e51b815260206004820152601660248201527514185e5bdd5d081d1c985b9cd9995c8819985a5b195960521b6044820152606401610546565b604080516001600160a01b03891681526020810185905289918b917ffc3d557e46010cdf2a5a80a495f308239f5be888eb5bb151be68d5c369728b24910160405180910390a35050505050506112316001600055565b505050565b60026000540361125957604051633ee5aeb560e01b815260040160405180910390fd5b6002600055565b60006020828403121561127257600080fd5b5035919050565b6000815180845260005b8181101561129f57602081850181015186830182015201611283565b506000602082860101526020601f19601f83011685010191505092915050565b6001600160a01b0389168152610100602082018190526000906112e49083018a611279565b82810360408401526112f6818a611279565b60608401989098525050931515608085015291151560a084015260c083015260e0909101529392505050565b60008083601f84011261133457600080fd5b50813567ffffffffffffffff81111561134c57600080fd5b60208301915083602082850101111561136457600080fd5b9250929050565b60008060008060006060868803121561138357600080fd5b853567ffffffffffffffff81111561139a57600080fd5b6113a688828901611322565b909650945050602086013567ffffffffffffffff8111156113c657600080fd5b6113d288828901611322565b96999598509660400135949350505050565b600080604083850312156113f757600080fd5b50508035926020909101359150565b60008060006060848603121561141b57600080fd5b833592506020840135915060408401356001600160a01b038116811461144057600080fd5b809150509250925092565b600181811c9082168061145f57607f821691505b60208210810361147f57634e487b7160e01b600052602260045260246000fd5b50919050565b60006020828403121561149757600080fd5b815180151581146114a757600080fd5b9392505050565b634e487b7160e01b600052604160045260246000fd5b601f82111561123157806000526020600020601f840160051c810160208510156114eb5750805b601f840160051c820191505b8181101561150b57600081556001016114f7565b5050505050565b815167ffffffffffffffff81111561152c5761152c6114ae565b6115408161153a845461144b565b846114c4565b6020601f821160018114611574576000831561155c5750848201515b600019600385901b1c1916600184901b17845561150b565b600084815260208120601f198516915b828110156115a45787850151825560209485019460019092019101611584565b50848210156115c25786840151600019600387901b60f8161c191681555b50505050600190811b01905550565b634e487b7160e01b600052601160045260246000fd5b6000600182016115f9576115f96115d1565b5060010190565b604081528260408201528284606083013760006060848301015260006060601f19601f8601168301019050826020830152949350505050565b8082028115828204841417611650576116506115d1565b92915050565b60008261167357634e487b7160e01b600052601260045260246000fd5b500490565b81810381811115611650576116506115d156fea2646970667358221220036072a48175b767c8093dabc55d4861c38449974298a434b139bec4b5f100c064736f6c634300081e0033",
+  "deployedBytecode": "0x6080604052600436106100c25760003560e01c80637b1039991161007f578063a573566211610059578063a5735662146102e7578063a9b07c2614610307578063de74e57b1461031d578063def5e7371461033d57600080fd5b80637b103999146102435780637b3c4baa146102775780639979ef45146102d457600080fd5b8063107a274a146100c75780633b8d915f146101045780634652c3e2146101265780634690484014610154578063539aa77f146101a0578063582c7ffd146101b5575b600080fd5b3480156100d357600080fd5b506100e76100e2366004611260565b61035d565b6040516100fb9897969594939291906112bf565b60405180910390f35b34801561011057600080fd5b5061012461011f366004611260565b6104ef565b005b34801561013257600080fd5b5061014661014136600461136b565b6105d1565b6040519081526020016100fb565b34801561016057600080fd5b506101887f000000000000000000000000000000000000000000000000000000000000000081565b6040516001600160a01b0390911681526020016100fb565b3480156101ac57600080fd5b5061014660fa81565b3480156101c157600080fd5b506102116101d03660046113e4565b60009182526003602090815260408084209284529190529020805460018201546002909201546001600160a01b039091169260ff8083169261010090041690565b604080516001600160a01b039095168552602085019390935290151591830191909152151560608201526080016100fb565b34801561024f57600080fd5b506101887f000000000000000000000000000000000000000000000000000000000000000081565b34801561028357600080fd5b506102116102923660046113e4565b60036020908152600092835260408084209091529082529020805460018201546002909201546001600160a01b03909116919060ff8082169161010090041684565b6101246102e2366004611260565b6108a7565b3480156102f357600080fd5b506101246103023660046113e4565b610a9d565b34801561031357600080fd5b5061014660015481565b34801561032957600080fd5b506100e7610338366004611260565b610cd7565b34801561034957600080fd5b50610124610358366004611406565b610e3b565b600081815260026020819052604082208054600382015460048301546005840154600685015460018601805460609889988b98899889988998899894976001600160a01b03909416969395880194929360ff8084169461010090940416929087906103c79061144b565b80601f01602080910402602001604051908101604052809291908181526020018280546103f39061144b565b80156104405780601f1061041557610100808354040283529160200191610440565b820191906000526020600020905b81548152906001019060200180831161042357829003601f168201915b505050505096508580546104539061144b565b80601f016020809104026020016040519081016040528092919081815260200182805461047f9061144b565b80156104cc5780601f106104a1576101008083540402835291602001916104cc565b820191906000526020600020905b8154815290600101906020018083116104af57829003601f168201915b505050505095509850985098509850985098509850985050919395975091939597565b600081815260026020526040902080546001600160a01b0316331461054f5760405162461bcd60e51b81526020600482015260116024820152702737ba103634b9ba34b7339037bbb732b960791b60448201526064015b60405180910390fd5b600481015460ff166105965760405162461bcd60e51b815260206004820152601060248201526f416c726561647920696e61637469766560801b6044820152606401610546565b60048101805460ff1916905560405182907fe8a884965a7fb1b7c1efd55ff478bcbd880c4b226a2e2218b83d31c493964ab390600090a25050565b6000846106205760405162461bcd60e51b815260206004820152601960248201527f4465736372697074696f6e2068617368207265717569726564000000000000006044820152606401610546565b826106665760405162461bcd60e51b8152602060048201526016602482015275105c9dd9585d99481516081251081c995c5d5a5c995960521b6044820152606401610546565b600154604080516101008101825233815281516020601f8a01819004810282018101909352888152909180830191908a908a9081908401838280828437600092019190915250505090825250604080516020601f8901819004810282018101909252878152918101919088908890819084018382808284376000920191909152505050908252506020810185905260016040808301919091525163b9209e3360e01b81523360048201526060909101907f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03169063b9209e3390602401602060405180830381865afa158015610767573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061078b9190611485565b1515815242602080830191909152600060409283018190528481526002825291909120825181546001600160a01b0319166001600160a01b039091161781559082015160018201906107dd9082611512565b50604082015160028201906107f29082611512565b5060608201516003820155608082015160048201805460a085015115156101000261ff00199315159390931661ffff199091161791909117905560c0820151600582015560e09091015160069091015560018054906000610852836115e7565b9190505550336001600160a01b0316817f6b7a3194eaddce2be5200d10785a15a5cd14a78b827cf902f4d23c35e6bd73f889898760405161089593929190611600565b60405180910390a39695505050505050565b6108af611236565b6000818152600260205260409020600481015460ff166109065760405162461bcd60e51b81526020600482015260126024820152714c697374696e67206e6f742061637469766560701b6044820152606401610546565b806003015434101561094e5760405162461bcd60e51b81526020600482015260116024820152704269642062656c6f77206d696e696d756d60781b6044820152606401610546565b80546001600160a01b031633036109a75760405162461bcd60e51b815260206004820152601960248201527f43616e6e6f7420626964206f6e206f776e206c697374696e67000000000000006044820152606401610546565b600681018054604080516080810182523381523460208083019182526000838501818152606085018281528a835260038452868320888452909352948120935184546001600160a01b0319166001600160a01b0390911617845591516001840155925160029092018054935161ffff1990941692151561ff00191692909217610100931515939093029290921790558254919290610a44836115e7565b9190505550336001600160a01b031681847f6f7e354ea3ab5c288aea37fce29c603f9a98a3b040f6d8f32f10e192ec47ff6a34604051610a8691815260200190565b60405180910390a45050610a9a6001600055565b50565b610aa5611236565b6000828152600360209081526040808320848452909152902080546001600160a01b03163314610b075760405162461bcd60e51b815260206004820152600d60248201526c2737ba103134b21037bbb732b960991b6044820152606401610546565b600281015460ff1615610b535760405162461bcd60e51b8152602060048201526014602482015273109a5908185b1c9958591e481858d8d95c1d195960621b6044820152606401610546565b6002810154610100900460ff1615610ba15760405162461bcd60e51b815260206004820152601160248201527020b63932b0b23c903bb4ba34323930bbb760791b6044820152606401610546565b6000816001015411610be35760405162461bcd60e51b815260206004820152600b60248201526a125b9d985b1a5908189a5960aa1b6044820152606401610546565b60028101805461ff0019166101001790556001810154604051600090339083908381818185875af1925050503d8060008114610c3b576040519150601f19603f3d011682016040523d82523d6000602084013e610c40565b606091505b5050905080610c815760405162461bcd60e51b815260206004820152600d60248201526c1499599d5b990819985a5b1959609a1b6044820152606401610546565b336001600160a01b031684867f343dbf7cf5952b78f69fd86b25d030d987e8efb40ff3bfac7cfcad1f1bc3866685604051610cbe91815260200190565b60405180910390a4505050610cd36001600055565b5050565b600260205260009081526040902080546001820180546001600160a01b039092169291610d039061144b565b80601f0160208091040260200160405190810160405280929190818152602001828054610d2f9061144b565b8015610d7c5780601f10610d5157610100808354040283529160200191610d7c565b820191906000526020600020905b815481529060010190602001808311610d5f57829003601f168201915b505050505090806002018054610d919061144b565b80601f0160208091040260200160405190810160405280929190818152602001828054610dbd9061144b565b8015610e0a5780601f10610ddf57610100808354040283529160200191610e0a565b820191906000526020600020905b815481529060010190602001808311610ded57829003601f168201915b5050506003840154600485015460058601546006909601549495919460ff8083169550610100909204909116925088565b610e43611236565b600083815260026020526040902080546001600160a01b03163314610e9e5760405162461bcd60e51b81526020600482015260116024820152702737ba103634b9ba34b7339037bbb732b960791b6044820152606401610546565b600481015460ff16610ee75760405162461bcd60e51b81526020600482015260126024820152714c697374696e67206e6f742061637469766560701b6044820152606401610546565b60008481526003602090815260408083208684529091529020600281015460ff1615610f4c5760405162461bcd60e51b8152602060048201526014602482015273109a5908185b1c9958591e481858d8d95c1d195960621b6044820152606401610546565b6002810154610100900460ff1615610f9a5760405162461bcd60e51b81526020600482015260116024820152702134b2103bb0b9903bb4ba34323930bbb760791b6044820152606401610546565b6000816001015411610fdc5760405162461bcd60e51b815260206004820152600b60248201526a125b9d985b1a5908189a5960aa1b6044820152606401610546565b6001600160a01b0383166110325760405162461bcd60e51b815260206004820152601760248201527f496e76616c696420737465616c746820616464726573730000000000000000006044820152606401610546565b600281018054600160ff1991821681179092556004840180549091169055810154600090612710906110669060fa90611639565b6110709190611656565b905060008183600101546110849190611678565b905060007f00000000000000000000000000000000000000000000000000000000000000006001600160a01b03168360405160006040518083038185875af1925050503d80600081146110f3576040519150601f19603f3d011682016040523d82523d6000602084013e6110f8565b606091505b505090508061113f5760405162461bcd60e51b8152602060048201526013602482015272119959481d1c985b9cd9995c8819985a5b1959606a1b6044820152606401610546565b6000866001600160a01b03168360405160006040518083038185875af1925050503d806000811461118c576040519150601f19603f3d011682016040523d82523d6000602084013e611191565b606091505b50509050806111db5760405162461bcd60e51b815260206004820152601660248201527514185e5bdd5d081d1c985b9cd9995c8819985a5b195960521b6044820152606401610546565b604080516001600160a01b03891681526020810185905289918b917ffc3d557e46010cdf2a5a80a495f308239f5be888eb5bb151be68d5c369728b24910160405180910390a35050505050506112316001600055565b505050565b60026000540361125957604051633ee5aeb560e01b815260040160405180910390fd5b6002600055565b60006020828403121561127257600080fd5b5035919050565b6000815180845260005b8181101561129f57602081850181015186830182015201611283565b506000602082860101526020601f19601f83011685010191505092915050565b6001600160a01b0389168152610100602082018190526000906112e49083018a611279565b82810360408401526112f6818a611279565b60608401989098525050931515608085015291151560a084015260c083015260e0909101529392505050565b60008083601f84011261133457600080fd5b50813567ffffffffffffffff81111561134c57600080fd5b60208301915083602082850101111561136457600080fd5b9250929050565b60008060008060006060868803121561138357600080fd5b853567ffffffffffffffff81111561139a57600080fd5b6113a688828901611322565b909650945050602086013567ffffffffffffffff8111156113c657600080fd5b6113d288828901611322565b96999598509660400135949350505050565b600080604083850312156113f757600080fd5b50508035926020909101359150565b60008060006060848603121561141b57600080fd5b833592506020840135915060408401356001600160a01b038116811461144057600080fd5b809150509250925092565b600181811c9082168061145f57607f821691505b60208210810361147f57634e487b7160e01b600052602260045260246000fd5b50919050565b60006020828403121561149757600080fd5b815180151581146114a757600080fd5b9392505050565b634e487b7160e01b600052604160045260246000fd5b601f82111561123157806000526020600020601f840160051c810160208510156114eb5750805b601f840160051c820191505b8181101561150b57600081556001016114f7565b5050505050565b815167ffffffffffffffff81111561152c5761152c6114ae565b6115408161153a845461144b565b846114c4565b6020601f821160018114611574576000831561155c5750848201515b600019600385901b1c1916600184901b17845561150b565b600084815260208120601f198516915b828110156115a45787850151825560209485019460019092019101611584565b50848210156115c25786840151600019600387901b60f8161c191681555b50505050600190811b01905550565b634e487b7160e01b600052601160045260246000fd5b6000600182016115f9576115f96115d1565b5060010190565b604081528260408201528284606083013760006060848301015260006060601f19601f8601168301019050826020830152949350505050565b8082028115828204841417611650576116506115d1565b92915050565b60008261167357634e487b7160e01b600052601260045260246000fd5b500490565b81810381811115611650576116506115d156fea2646970667358221220036072a48175b767c8093dabc55d4861c38449974298a434b139bec4b5f100c064736f6c634300081e0033",
+  "devdoc": {
+    "details": "No plaintext data is stored. Only description hashes, Arweave TX IDs (pointing to encrypted payloads), and payment state are kept on-chain. Fund-moving functions follow checks-effects-interactions and are additionally protected with {ReentrancyGuard} as defense-in-depth.",
+    "errors": {
+      "ReentrancyGuardReentrantCall()": [
+        {
+          "details": "Unauthorized reentrant call."
+        }
+      ]
+    },
+    "kind": "dev",
+    "methods": {
+      "acceptBid(uint256,uint256,address)": {
+        "params": {
+          "_bidIndex": "Index of the bid to accept.",
+          "_listingId": "ID of the listing.",
+          "_stealthAddress": "ERC-5564 stealth address for anonymous payment."
+        }
+      },
+      "constructor": {
+        "params": {
+          "_feeRecipient": "Address that receives platform fees.",
+          "_registry": "WhistleblowerRegistry used to determine verified status."
+        }
+      },
+      "createListing(string,string,uint256)": {
+        "details": "The verified flag is read from the registry for the caller and cannot be      self-asserted, so a \"Verified Source\" badge always reflects on-chain reputation.",
+        "params": {
+          "_arweaveTxId": "Arweave TX ID of the encrypted payload.",
+          "_descriptionHash": "IPFS/Arweave hash of the encrypted description.",
+          "_minimumBid": "Minimum bid amount in wei."
+        }
+      },
+      "deactivateListing(uint256)": {
+        "params": {
+          "_listingId": "ID of the listing to deactivate."
+        }
+      },
+      "getBid(uint256,uint256)": {
+        "params": {
+          "_bidIndex": "Index of the bid.",
+          "_listingId": "ID of the listing."
+        }
+      },
+      "getListing(uint256)": {
+        "params": {
+          "_listingId": "ID of the listing."
+        }
+      },
+      "placeBid(uint256)": {
+        "params": {
+          "_listingId": "ID of the listing to bid on."
+        }
+      },
+      "withdrawBid(uint256,uint256)": {
+        "params": {
+          "_bidIndex": "Index of the bid to withdraw.",
+          "_listingId": "ID of the listing."
+        }
+      }
+    },
+    "title": "Marketplace",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "PLATFORM_FEE_BPS()": {
+        "notice": "Platform fee in basis points (e.g. 250 = 2.5%)"
+      },
+      "acceptBid(uint256,uint256,address)": {
+        "notice": "Accept a bid and release funds to the whistleblower's stealth address. A platform fee is deducted and sent to the fee recipient."
+      },
+      "createListing(string,string,uint256)": {
+        "notice": "Create a new listing for encrypted information."
+      },
+      "deactivateListing(uint256)": {
+        "notice": "Deactivate a listing. Only the whistleblower can deactivate."
+      },
+      "getBid(uint256,uint256)": {
+        "notice": "Get bid details."
+      },
+      "getListing(uint256)": {
+        "notice": "Get listing details."
+      },
+      "placeBid(uint256)": {
+        "notice": "Place a bid on a listing. Funds are held in escrow."
+      },
+      "registry()": {
+        "notice": "Registry consulted for a whistleblower's verified (credibility) status."
+      },
+      "withdrawBid(uint256,uint256)": {
+        "notice": "Withdraw an unaccepted bid. Only the original bidder can withdraw."
+      }
+    },
+    "notice": "Anonymous information marketplace where whistleblowers list encrypted data and journalists place bids. When a bid is accepted, funds are sent to an ERC-5564 stealth address to break the on-chain link between payer and receiver.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 10,
+        "contract": "contracts/Marketplace.sol:Marketplace",
+        "label": "_status",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 112,
+        "contract": "contracts/Marketplace.sol:Marketplace",
+        "label": "listingCount",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 117,
+        "contract": "contracts/Marketplace.sol:Marketplace",
+        "label": "listings",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_mapping(t_uint256,t_struct(Listing)101_storage)"
+      },
+      {
+        "astId": 124,
+        "contract": "contracts/Marketplace.sol:Marketplace",
+        "label": "bids",
+        "offset": 0,
+        "slot": "3",
+        "type": "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)110_storage))"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_uint256,t_mapping(t_uint256,t_struct(Bid)110_storage))": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => mapping(uint256 => struct Marketplace.Bid))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_uint256,t_struct(Bid)110_storage)"
+      },
+      "t_mapping(t_uint256,t_struct(Bid)110_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct Marketplace.Bid)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Bid)110_storage"
+      },
+      "t_mapping(t_uint256,t_struct(Listing)101_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct Marketplace.Listing)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Listing)101_storage"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Bid)110_storage": {
+        "encoding": "inplace",
+        "label": "struct Marketplace.Bid",
+        "members": [
+          {
+            "astId": 103,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "bidder",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 105,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "amount",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 107,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "isAccepted",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_bool"
+          },
+          {
+            "astId": 109,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "isWithdrawn",
+            "offset": 1,
+            "slot": "2",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "96"
+      },
+      "t_struct(Listing)101_storage": {
+        "encoding": "inplace",
+        "label": "struct Marketplace.Listing",
+        "members": [
+          {
+            "astId": 86,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "whistleblower",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_address"
+          },
+          {
+            "astId": 88,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "descriptionHash",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 90,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "arweaveTxId",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 92,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "minimumBid",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 94,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "isActive",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bool"
+          },
+          {
+            "astId": 96,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "isVerified",
+            "offset": 1,
+            "slot": "4",
+            "type": "t_bool"
+          },
+          {
+            "astId": 98,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "createdAt",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 100,
+            "contract": "contracts/Marketplace.sol:Marketplace",
+            "label": "bidCount",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_uint256"
+          }
+        ],
+        "numberOfBytes": "224"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}

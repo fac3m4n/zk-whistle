@@ -106,7 +106,14 @@ const config: HardhatUserConfig = {
       accounts: [deployerPrivateKey],
     },
     baseSepolia: {
-      url: "https://sepolia.base.org",
+      // The official public RPC (sepolia.base.org) is heavily rate-limited and
+      // lags on nonce reporting, which breaks multi-tx deploys. Default to a more
+      // reliable keyless endpoint; override with your own (Alchemy/Infura/etc.)
+      // via BASE_SEPOLIA_RPC_URL in packages/hardhat/.env for best results.
+      url:
+        process.env.BASE_SEPOLIA_RPC_URL ||
+        (process.env.ALCHEMY_API_KEY ? `https://base-sepolia.g.alchemy.com/v2/${providerApiKey}` : "") ||
+        "https://base-sepolia-rpc.publicnode.com",
       accounts: [deployerPrivateKey],
     },
     scrollSepolia: {
