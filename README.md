@@ -201,9 +201,9 @@ The real Lit key-gating / release flow and the real Reclaim verifier only work o
 yarn generate                 # or: yarn account:import
 yarn account                  # show address; fund it with Base Sepolia ETH (faucet)
 
-# 2. (optional) enable on-chain Reclaim verification on the testnet:
-#    set RECLAIM_VERIFIER_ADDRESS=<deployed Reclaim verifier for Base Sepolia>
-#    in packages/hardhat/.env  (see https://docs.reclaimprotocol.org for the address)
+# 2. On-chain Reclaim verification auto-wires on Base Sepolia (and Base mainnet) —
+#    the deploy script knows the verifier address. To use a different chain or a
+#    custom deployment, set RECLAIM_VERIFIER_ADDRESS in packages/hardhat/.env.
 
 # 3. Deploy
 yarn deploy --network baseSepolia
@@ -271,7 +271,7 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - ✅ **On-chain Reclaim verification wired** — `submitVerifiedProof(Proof)` verifies witness signatures via a deployed Reclaim verifier and marks the proof's `owner` verified (replay-safe). Local dev uses a `MockReclaim`; live networks use `RECLAIM_VERIFIER_ADDRESS`. The identity UI auto-selects the on-chain path when a verifier is configured.
 - ✅ **Lit SDK aligned to v8 (Naga)** — migrated off the sunset v7/Datil stack to `@lit-protocol/lit-client` + `networks` + `auth`; network/chain support is centralized and the unsupported-chain case is handled.
 - ✅ **Reclaim app secret moved server-side** — proof initialization runs in `app/api/reclaim/route.ts` (allow-listed provider, per-IP rate limit, generic errors); the client only ever sees a serialized request config.
-- ⚠️ **On-chain Reclaim verification needs a live verifier** — the path is implemented and tested against a `MockReclaim`, but validating against the **real** deployed Reclaim verifier requires setting `RECLAIM_VERIFIER_ADDRESS` for the target chain and a live proof.
+- ⚠️ **On-chain Reclaim verification — end-to-end validation pending** — the path is implemented and tested against a `MockReclaim`, and the deploy auto-wires Reclaim's **real** verifier on Base Sepolia (`0xF90085f5Fd1a3bEb8678623409b3811eCeC5f6A5`, on-chain verified) and Base mainnet. Still to do: a live proof round-trip through `submitVerifiedProof` against the real verifier.
 - ⚠️ **Lit decrypt/release flow is not yet wired into any UI** — `decryptKeyFromLit` + `getDecryptAuthContext` follow the documented v8 `AuthManager` pattern but have not been exercised against a live Naga deployment.
 - ✅ `DeadMansSwitch` now has a full test suite, and the `Marketplace` carries OpenZeppelin `ReentrancyGuard` on `placeBid`/`acceptBid`/`withdrawBid` (in addition to checks-effects-interactions).
 - ⚠️ The `/vault/create` route ships the full Lit v8 client (~2.4 MB first load); consider lazy-loading the Lit service if bundle size matters.

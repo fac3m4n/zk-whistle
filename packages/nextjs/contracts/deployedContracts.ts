@@ -1463,7 +1463,7 @@ const deployedContracts = {
   },
   84532: {
     DeadMansSwitch: {
-      address: "0x1c91C807B2f8807128AcEDa57c9264be733e6dE9",
+      address: "0x2F0653c9e99832972F15E37Fcc344dA6e9adea14",
       abi: [
         {
           anonymous: false,
@@ -1773,10 +1773,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 42623366,
+      deployedOnBlock: 42625517,
     },
     Marketplace: {
-      address: "0x0Bed551ed8ab18094b9B09eEc9C1560e739dcAb1",
+      address: "0xBf268E6d29AD23D5018F52cb3f622dd52fd77bcE",
       abi: [
         {
           inputs: [
@@ -2272,10 +2272,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 42625048,
+      deployedOnBlock: 42625634,
     },
     WhistleblowerRegistry: {
-      address: "0x926a4E211a4BCDaac1Bf4a40beFbD64354a27Bb6",
+      address: "0xeA501A0a07Faece0CBc44015fb64772A9BeA3A98",
       abi: [
         {
           inputs: [
@@ -2803,7 +2803,7 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 42625047,
+      deployedOnBlock: 42625604,
     },
   },
 } as const;

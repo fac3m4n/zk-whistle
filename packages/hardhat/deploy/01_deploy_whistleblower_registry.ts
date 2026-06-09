@@ -2,6 +2,17 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 
 /**
+ * Deployed Reclaim verifier addresses by chainId.
+ * Source: Reclaim official docs https://docs.reclaimprotocol.org/onchain/solidity/supported-networks
+ * Base Sepolia (84532) additionally verified on-chain via eth_getCode (has contract code).
+ * Override any entry with the RECLAIM_VERIFIER_ADDRESS env var.
+ */
+const RECLAIM_VERIFIERS: Record<string, string> = {
+  "84532": "0xF90085f5Fd1a3bEb8678623409b3811eCeC5f6A5", // Base Sepolia
+  "8453": "0x8CDc031d5B7F148ab0435028B16c682c469CEfC3", // Base mainnet
+};
+
+/**
  * Deploys the WhistleblowerRegistry contract.
  * This contract stores hashes of Reclaim Protocol zkTLS proofs on-chain
  * to establish whistleblower credibility without revealing identity.
@@ -36,8 +47,9 @@ const deployWhistleblowerRegistry: DeployFunction = async function (hre: Hardhat
     } catch {
       verifier = undefined;
     }
-  } else if (process.env.RECLAIM_VERIFIER_ADDRESS) {
-    verifier = process.env.RECLAIM_VERIFIER_ADDRESS;
+  } else {
+    // Explicit env override wins; otherwise fall back to the known per-chain address.
+    verifier = process.env.RECLAIM_VERIFIER_ADDRESS || RECLAIM_VERIFIERS[chainId];
   }
 
   if (verifier) {
