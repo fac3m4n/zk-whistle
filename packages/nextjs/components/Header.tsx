@@ -11,6 +11,7 @@ import {
   BuildingStorefrontIcon,
   FingerPrintIcon,
   LockClosedIcon,
+  LockOpenIcon,
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import { FaucetButton, RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
@@ -32,6 +33,11 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "Vault",
     href: "/vault",
     icon: <LockClosedIcon className="h-4 w-4" />,
+  },
+  {
+    label: "Release",
+    href: "/release",
+    icon: <LockOpenIcon className="h-4 w-4" />,
   },
   {
     label: "Identity",

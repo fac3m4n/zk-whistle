@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 /**
  * @notice Minimal view into the WhistleblowerRegistry used to source verified status.
  */
@@ -16,8 +18,10 @@ interface IWhistleblowerRegistry {
  * payer and receiver.
  * @dev No plaintext data is stored. Only description hashes, Arweave TX IDs
  * (pointing to encrypted payloads), and payment state are kept on-chain.
+ * Fund-moving functions follow checks-effects-interactions and are additionally
+ * protected with {ReentrancyGuard} as defense-in-depth.
  */
-contract Marketplace {
+contract Marketplace is ReentrancyGuard {
     // -------------------------------------------------------
     // Types
     // -------------------------------------------------------
@@ -144,7 +148,7 @@ contract Marketplace {
      * @notice Place a bid on a listing. Funds are held in escrow.
      * @param _listingId ID of the listing to bid on.
      */
-    function placeBid(uint256 _listingId) external payable {
+    function placeBid(uint256 _listingId) external payable nonReentrant {
         Listing storage listing = listings[_listingId];
         require(listing.isActive, "Listing not active");
         require(msg.value >= listing.minimumBid, "Bid below minimum");
@@ -170,7 +174,7 @@ contract Marketplace {
      * @param _bidIndex Index of the bid to accept.
      * @param _stealthAddress ERC-5564 stealth address for anonymous payment.
      */
-    function acceptBid(uint256 _listingId, uint256 _bidIndex, address payable _stealthAddress) external {
+    function acceptBid(uint256 _listingId, uint256 _bidIndex, address payable _stealthAddress) external nonReentrant {
         Listing storage listing = listings[_listingId];
         require(listing.whistleblower == msg.sender, "Not listing owner");
         require(listing.isActive, "Listing not active");
@@ -202,7 +206,7 @@ contract Marketplace {
      * @param _listingId ID of the listing.
      * @param _bidIndex Index of the bid to withdraw.
      */
-    function withdrawBid(uint256 _listingId, uint256 _bidIndex) external {
+    function withdrawBid(uint256 _listingId, uint256 _bidIndex) external nonReentrant {
         Bid storage bid = bids[_listingId][_bidIndex];
         require(bid.bidder == msg.sender, "Not bid owner");
         require(!bid.isAccepted, "Bid already accepted");

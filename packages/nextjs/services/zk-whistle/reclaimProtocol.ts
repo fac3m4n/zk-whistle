@@ -9,39 +9,42 @@
 import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk";
 import type { ReclaimProof } from "~~/types/zk-whistle";
 
-// Reclaim app credentials - loaded from environment variables
-const RECLAIM_APP_ID = process.env.NEXT_PUBLIC_RECLAIM_APP_ID || "";
-const RECLAIM_APP_SECRET = process.env.NEXT_PUBLIC_RECLAIM_APP_SECRET || "";
-
 /**
  * Initialize a Reclaim proof request session.
- * The providerId determines what kind of proof the user will generate
- * (e.g., Twitter account, corporate portal login, etc.)
  *
- * @param providerId - Reclaim provider ID for the type of verification
- * @returns The proof request object and the request URL for the user
+ * The app **secret** is held server-side: this fetches a serialized request
+ * config from `/api/reclaim` (which performs `ReclaimProofRequest.init` with the
+ * secret) and rebuilds it client-side via `fromJsonString`. No secret is ever
+ * exposed to the browser.
+ *
+ * @param providerId - Reclaim provider ID for the type of verification.
+ * @returns The request URL for the user and an `onSuccess` subscriber.
  */
 export async function initReclaimSession(providerId: string): Promise<{
   requestUrl: string;
   statusUrl: string;
-
   onSuccess: (callback: (proofs: any) => void) => void;
 }> {
-  if (!RECLAIM_APP_ID || !RECLAIM_APP_SECRET) {
-    throw new Error(
-      "Reclaim Protocol credentials not configured. Set NEXT_PUBLIC_RECLAIM_APP_ID and NEXT_PUBLIC_RECLAIM_APP_SECRET in .env.local",
-    );
+  const res = await fetch("/api/reclaim", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ providerId }),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data?.error || "Failed to start verification session.");
   }
 
-  const reclaimRequest = await ReclaimProofRequest.init(RECLAIM_APP_ID, RECLAIM_APP_SECRET, providerId);
+  const { reclaimRequest } = await res.json();
+  const reclaimProofRequest = await ReclaimProofRequest.fromJsonString(reclaimRequest);
 
-  const requestUrl = await reclaimRequest.getRequestUrl();
-  const statusUrl = reclaimRequest.getStatusUrl();
+  const requestUrl = await reclaimProofRequest.getRequestUrl();
+  const statusUrl = reclaimProofRequest.getStatusUrl();
 
-  // Set up the success callback
   let successCallback: ((proofs: ReclaimProof[]) => void) | null = null;
 
-  reclaimRequest.startSession({
+  reclaimProofRequest.startSession({
     onSuccess: proofs => {
       if (successCallback) {
         successCallback(proofs as unknown as ReclaimProof[]);

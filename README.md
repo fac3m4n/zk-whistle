@@ -185,11 +185,11 @@ Copy [`packages/nextjs/.env.example`](packages/nextjs/.env.example) to `packages
 ```bash
 NEXT_PUBLIC_ALCHEMY_API_KEY=
 NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=
-NEXT_PUBLIC_RECLAIM_APP_ID=        # from https://dev.reclaimprotocol.org
-NEXT_PUBLIC_RECLAIM_APP_SECRET=    # see security note below
+NEXT_PUBLIC_RECLAIM_APP_ID=        # from https://dev.reclaimprotocol.org (public)
+RECLAIM_APP_SECRET=                # server-only — NOT prefixed with NEXT_PUBLIC_
 ```
 
-> **Security note:** the Reclaim **app secret** must not ship in client-side (`NEXT_PUBLIC_`) bundles in production. Move proof-request initialization behind a small server route / API handler so the secret stays server-side. This is tracked in the roadmap below.
+> **Security note:** the Reclaim **app secret** is used **only** in the server route [`app/api/reclaim/route.ts`](packages/nextjs/app/api/reclaim/route.ts) and never ships to the browser. That route initializes the proof request server-side and returns a serialized config; the client rebuilds it with `ReclaimProofRequest.fromJsonString(...)`. The route validates the `providerId` against an allow-list, rate-limits per IP, and returns generic errors.
 
 ### Useful commands
 
@@ -233,10 +233,10 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - ✅ **`Marketplace` reads `isVerified` from the registry** — `createListing` no longer takes a self-asserted flag; the marketplace is constructed with the registry address and queries `registry.isVerified(msg.sender)`.
 - ✅ **`WhistleblowerRegistry` hardened** — now `Ownable` with `attestVerification` (owner/verifier path) and an explicit `autoVerifyOnSubmit` dev flag (documented above), instead of unconditional trust-on-submit.
 - ✅ **Lit SDK aligned to v8 (Naga)** — migrated off the sunset v7/Datil stack to `@lit-protocol/lit-client` + `networks` + `auth`; network/chain support is centralized and the unsupported-chain case is handled.
-- ⚠️ **Reclaim app secret is still client-side** (`NEXT_PUBLIC_RECLAIM_APP_SECRET`) — move proof initialization to a server route before production.
+- ✅ **Reclaim app secret moved server-side** — proof initialization runs in `app/api/reclaim/route.ts` (allow-listed provider, per-IP rate limit, generic errors); the client only ever sees a serialized request config.
 - ⚠️ **On-chain Reclaim proof verification is not implemented** — verification is currently an off-chain/owner attestation (see trust model above).
 - ⚠️ **Lit decrypt/release flow is not yet wired into any UI** — `decryptKeyFromLit` + `getDecryptAuthContext` follow the documented v8 `AuthManager` pattern but have not been exercised against a live Naga deployment.
-- ⚠️ No `DeadMansSwitch` test file yet; no `ReentrancyGuard` on the marketplace (it follows checks-effects-interactions, but a guard is recommended belt-and-suspenders).
+- ✅ `DeadMansSwitch` now has a full test suite, and the `Marketplace` carries OpenZeppelin `ReentrancyGuard` on `placeBid`/`acceptBid`/`withdrawBid` (in addition to checks-effects-interactions).
 - ⚠️ The `/vault/create` route ships the full Lit v8 client (~2.4 MB first load); consider lazy-loading the Lit service if bundle size matters.
 
 ## Roadmap
@@ -245,10 +245,10 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - [x] Read `isVerified` from `WhistleblowerRegistry` inside `Marketplace.createListing`.
 - [x] Align Lit SDK package versions (migrated to v8 / Naga); reconcile target network naming.
 - [x] Harden the registry trust model (owner attestation + documented `autoVerifyOnSubmit`).
-- [ ] Move Reclaim secret + proof initialization to a server route.
+- [x] Move Reclaim secret + proof initialization to a server route.
 - [ ] Add on-chain Reclaim proof verification (or formalize the off-chain attestation trust assumption).
-- [ ] Build the release/decrypt UI and validate the Lit `authContext` decrypt path against live Naga.
-- [ ] Add `ReentrancyGuard` + a full `DeadMansSwitch` test suite.
+- [x] Build the release/decrypt UI (`/release`: status lookup → Arweave fetch → Lit `authContext` decrypt → AES decrypt → download). _Live `authContext` validation against Naga still pending a testnet deploy._
+- [x] Add `ReentrancyGuard` + a full `DeadMansSwitch` test suite.
 - [ ] Deploy to a Lit-supported testnet (e.g. Base Sepolia) and validate the end-to-end release.
 - [ ] Future work from the thesis: duress "kill switch", ZK-Email provenance, gasless `checkIn()` via relayer, cross-chain triggers.
 
