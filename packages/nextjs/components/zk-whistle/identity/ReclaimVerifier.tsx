@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { zeroAddress } from "viem";
 import { ArrowTopRightOnSquareIcon, CheckCircleIcon, FingerPrintIcon } from "@heroicons/react/24/outline";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
@@ -111,7 +112,14 @@ export const ReclaimVerifier = () => {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Verify Your Credential</h3>
         <div className="alert alert-info">
-          <span>Open the link below to complete verification via Reclaim Protocol.</span>
+          <span>
+            Scan the QR code with your phone, or open the link on this device, to verify via Reclaim Protocol.
+          </span>
+        </div>
+        <div className="flex justify-center">
+          <div className="bg-white p-4 rounded-xl">
+            <QRCodeSVG value={requestUrl} size={208} />
+          </div>
         </div>
         <a href={requestUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary btn-block">
           <ArrowTopRightOnSquareIcon className="h-5 w-5" />

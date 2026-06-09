@@ -6,7 +6,7 @@
  * The user generates a proof via the Reclaim widget, and the hash of the proof
  * is stored on-chain in the WhistleblowerRegistry contract.
  */
-import { ReclaimProofRequest } from "@reclaimprotocol/js-sdk";
+import { ReclaimProofRequest, verifyProof as sdkVerifyProof } from "@reclaimprotocol/js-sdk";
 import type { ReclaimProof } from "~~/types/zk-whistle";
 
 /**
@@ -65,14 +65,18 @@ export async function initReclaimSession(providerId: string): Promise<{
 }
 
 /**
- * Verify a Reclaim proof client-side.
- * Checks the cryptographic signatures and witness attestations.
+ * Verify a Reclaim proof: a fast structural guard followed by the SDK's
+ * cryptographic verification of the witness attestation signatures.
+ *
+ * Note: for the on-chain `submitVerifiedProof` path this is a client-side
+ * pre-check only — the authoritative verification happens in the Reclaim
+ * verifier contract. For the hash-only fallback path, this is the real check.
  *
  * @param proof - The Reclaim proof to verify
- * @returns True if the proof is valid
+ * @returns True if the proof is structurally and cryptographically valid
  */
-export function verifyProofLocally(proof: ReclaimProof): boolean {
-  // Basic structural validation
+export async function verifyProofLocally(proof: ReclaimProof): Promise<boolean> {
+  // Fast structural guard before the (heavier) cryptographic verification.
   if (!proof.identifier || !proof.claimData || !proof.signatures || proof.signatures.length === 0) {
     return false;
   }
@@ -85,9 +89,14 @@ export function verifyProofLocally(proof: ReclaimProof): boolean {
     return false;
   }
 
-  // Full cryptographic verification would use @reclaimprotocol/js-sdk's verifyProof
-  // For MVP, structural validation is sufficient as the SDK handles verification
-  return true;
+  try {
+    // Cryptographic verification of the witness signatures via the Reclaim SDK.
+
+    return await sdkVerifyProof(proof as any);
+  } catch (error) {
+    console.error("Reclaim verifyProof failed:", error instanceof Error ? error.message : "unknown error");
+    return false;
+  }
 }
 
 /**

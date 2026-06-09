@@ -214,6 +214,19 @@ yarn start
 
 **Validating the Lit round-trip:** create a vault on Base Sepolia (the wizard seals the AES key with Lit + uploads the manifest to Arweave), let the heartbeat interval elapse without checking in (or use a short interval), then open `/release`, enter the owner address, and decrypt. This exercises the `getDecryptAuthContext` → `decryptKeyFromLit` path against live Naga that local Hardhat cannot.
 
+#### Deployed contracts — Base Sepolia (chain `84532`)
+
+Live deployment used for end-to-end validation. The registry's `reclaimVerifier` is wired to Reclaim's real verifier and `autoVerifyOnSubmit` is `false` (verification is cryptographic, not trust-on-submit) — both confirmed on-chain.
+
+| Contract | Address |
+| --- | --- |
+| `DeadMansSwitch` | [`0x2F0653c9e99832972F15E37Fcc344dA6e9adea14`](https://sepolia.basescan.org/address/0x2F0653c9e99832972F15E37Fcc344dA6e9adea14) |
+| `WhistleblowerRegistry` | [`0xeA501A0a07Faece0CBc44015fb64772A9BeA3A98`](https://sepolia.basescan.org/address/0xeA501A0a07Faece0CBc44015fb64772A9BeA3A98) |
+| `Marketplace` | [`0xBf268E6d29AD23D5018F52cb3f622dd52fd77bcE`](https://sepolia.basescan.org/address/0xBf268E6d29AD23D5018F52cb3f622dd52fd77bcE) |
+| Reclaim verifier (external) | [`0xF90085f5Fd1a3bEb8678623409b3811eCeC5f6A5`](https://sepolia.basescan.org/address/0xF90085f5Fd1a3bEb8678623409b3811eCeC5f6A5) |
+
+> Public RPC note: the official `https://sepolia.base.org` endpoint is rate-limited and causes intermittent `NONCE_EXPIRED` / `REPLACEMENT_UNDERPRICED` errors on multi-tx deploys. The config defaults to a reliable keyless endpoint and accepts a `BASE_SEPOLIA_RPC_URL` override (use your own Alchemy/Infura key for best results). If a deploy fails mid-run, simply re-run **without** `--reset` — `hardhat-deploy` resumes and re-reads the on-chain nonce.
+
 ### Environment variables
 
 Copy [`packages/nextjs/.env.example`](packages/nextjs/.env.example) to `packages/nextjs/.env.local` and fill in:
@@ -263,7 +276,7 @@ yarn deploy --network <network>   # Deploy to a live network (e.g. baseSepolia)
 
 This is an active research prototype. Honest accounting of what is and isn't wired end-to-end:
 
-- ✅ Three contracts implemented, deployed locally, unit-tested (**76 passing**).
+- ✅ Three contracts implemented, unit-tested (**91 passing**), and **deployed to Base Sepolia** (addresses above) in addition to local Hardhat.
 - ✅ Client-side AES-256-GCM, Irys upload, Lit, Reclaim, and stealth-address **services** all implemented.
 - ✅ **Vault wizard wired to the real pipeline** — AES encrypt → Lit seals the AES key under the `isDeceased()` ACC → self-describing manifest uploaded to Arweave (Irys) → `createSwitch` stores the real Arweave TX id + `dataToEncryptHash`. Placeholders removed. Falls back to `local-preview` on non-Lit chains (see Lit network requirement).
 - ✅ **`Marketplace` reads `isVerified` from the registry** — `createListing` no longer takes a self-asserted flag; the marketplace is constructed with the registry address and queries `registry.isVerified(msg.sender)`.
@@ -271,8 +284,8 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - ✅ **On-chain Reclaim verification wired** — `submitVerifiedProof(Proof)` verifies witness signatures via a deployed Reclaim verifier and marks the proof's `owner` verified (replay-safe). Local dev uses a `MockReclaim`; live networks use `RECLAIM_VERIFIER_ADDRESS`. The identity UI auto-selects the on-chain path when a verifier is configured.
 - ✅ **Lit SDK aligned to v8 (Naga)** — migrated off the sunset v7/Datil stack to `@lit-protocol/lit-client` + `networks` + `auth`; network/chain support is centralized and the unsupported-chain case is handled.
 - ✅ **Reclaim app secret moved server-side** — proof initialization runs in `app/api/reclaim/route.ts` (allow-listed provider, per-IP rate limit, generic errors); the client only ever sees a serialized request config.
-- ⚠️ **On-chain Reclaim verification — end-to-end validation pending** — the path is implemented and tested against a `MockReclaim`, and the deploy auto-wires Reclaim's **real** verifier on Base Sepolia (`0xF90085f5Fd1a3bEb8678623409b3811eCeC5f6A5`, on-chain verified) and Base mainnet. Still to do: a live proof round-trip through `submitVerifiedProof` against the real verifier.
-- ⚠️ **Lit decrypt/release flow is not yet wired into any UI** — `decryptKeyFromLit` + `getDecryptAuthContext` follow the documented v8 `AuthManager` pattern but have not been exercised against a live Naga deployment.
+- ✅ **On-chain Reclaim verifier wired on a live network** — the Base Sepolia registry's `reclaimVerifier` is set to Reclaim's real verifier (`0xF90085…f6A5`) with `autoVerifyOnSubmit=false`, both confirmed on-chain. The identity UI auto-selects the on-chain `submitVerifiedProof` path there. _Remaining: a live proof round-trip through `submitVerifiedProof` against the real verifier (needs a completed Reclaim proof bound to the wallet)._
+- ⚠️ **Lit decrypt/release flow is built but not yet validated against live Naga** — the `/release` UI wires status lookup → Arweave fetch → `getDecryptAuthContext` → `decryptKeyFromLit` → AES decrypt → download (v8 `AuthManager` pattern). With the Base Sepolia deploy now live, the end-to-end round-trip is ready to be exercised.
 - ✅ `DeadMansSwitch` now has a full test suite, and the `Marketplace` carries OpenZeppelin `ReentrancyGuard` on `placeBid`/`acceptBid`/`withdrawBid` (in addition to checks-effects-interactions).
 - ⚠️ The `/vault/create` route ships the full Lit v8 client (~2.4 MB first load); consider lazy-loading the Lit service if bundle size matters.
 
@@ -284,9 +297,9 @@ This is an active research prototype. Honest accounting of what is and isn't wir
 - [x] Harden the registry trust model (owner attestation + documented `autoVerifyOnSubmit`).
 - [x] Move Reclaim secret + proof initialization to a server route.
 - [x] Add on-chain Reclaim proof verification (`submitVerifiedProof` + deployed-verifier wiring; tested with `MockReclaim`). _Validate against the real Reclaim verifier on a testnet next._
-- [x] Build the release/decrypt UI (`/release`: status lookup → Arweave fetch → Lit `authContext` decrypt → AES decrypt → download). _Live `authContext` validation against Naga still pending a testnet deploy._
+- [x] Build the release/decrypt UI (`/release`: status lookup → Arweave fetch → Lit `authContext` decrypt → AES decrypt → download). _Testnet deploy now live (Base Sepolia); live `authContext` round-trip ready to validate._
 - [x] Add `ReentrancyGuard` + a full `DeadMansSwitch` test suite.
-- [~] Deploy to a Lit-supported testnet (e.g. Base Sepolia) — config/tooling/docs ready (`hardhat.config.ts` + frontend `targetNetworks` + deploy guide above); the broadcast needs a funded deployer key. Validate the end-to-end Lit release after deploying.
+- [x] Deploy to a Lit-supported testnet — **deployed to Base Sepolia** (addresses above); Reclaim verifier wired and confirmed on-chain. _Next: exercise the end-to-end Lit release and a live Reclaim proof against the live deployment._
 - [ ] Future work from the thesis: duress "kill switch", ZK-Email provenance, gasless `checkIn()` via relayer, cross-chain triggers.
 
 ---

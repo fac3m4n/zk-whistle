@@ -53,10 +53,10 @@ export function useReclaimProof() {
       const session = await initReclaimSession(providerId);
 
       // Set up the success callback
-      session.onSuccess(proofs => {
+      session.onSuccess(async proofs => {
         const proof = Array.isArray(proofs) ? proofs[0] : proofs;
         if (proof) {
-          const verified = verifyProofLocally(proof as ReclaimProof);
+          const verified = await verifyProofLocally(proof as ReclaimProof);
           if (verified) {
             const hash = hashProof(proof as ReclaimProof);
             setState(prev => ({
