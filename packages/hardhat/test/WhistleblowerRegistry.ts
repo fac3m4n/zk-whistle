@@ -11,10 +11,12 @@ describe("WhistleblowerRegistry", function () {
   const PROOF_HASH_2 = ethers.keccak256(ethers.toUtf8Bytes("reclaim_proof_json_2"));
   const STEALTH_META = "st:eth:0x1234abcd...viewing_key...spending_key";
 
+  // user1 (signer 0) is also the deployer and therefore the registry owner/verifier.
   beforeEach(async () => {
     [user1, user2] = await ethers.getSigners();
     const factory = await ethers.getContractFactory("WhistleblowerRegistry");
-    registry = (await factory.deploy()) as WhistleblowerRegistry;
+    // autoVerifyOnSubmit enabled (dev/demo default)
+    registry = (await factory.deploy(true)) as WhistleblowerRegistry;
     await registry.waitForDeployment();
   });
 
@@ -133,6 +135,55 @@ describe("WhistleblowerRegistry", function () {
       await registry.submitProofHash(PROOF_HASH_1);
       await registry.submitProofHash(PROOF_HASH_2);
       expect(await registry.getRegisteredUserCount()).to.equal(1);
+    });
+  });
+
+  describe("attestVerification (owner/verifier path)", function () {
+    it("Should let the owner revoke a verified user", async function () {
+      await registry.connect(user2).submitProofHash(PROOF_HASH_2);
+      expect(await registry.isVerified(user2.address)).to.be.true;
+
+      await registry.attestVerification(user2.address, false);
+      expect(await registry.isVerified(user2.address)).to.be.false;
+    });
+
+    it("Should let the owner verify a user when auto-verify is off", async function () {
+      await registry.setAutoVerifyOnSubmit(false);
+      await registry.connect(user2).submitProofHash(PROOF_HASH_2);
+      expect(await registry.isVerified(user2.address)).to.be.false;
+
+      await expect(registry.attestVerification(user2.address, true))
+        .to.emit(registry, "VerificationUpdated")
+        .withArgs(user2.address, true);
+      expect(await registry.isVerified(user2.address)).to.be.true;
+    });
+
+    it("Should reject attestation from a non-owner", async function () {
+      await registry.connect(user2).submitProofHash(PROOF_HASH_2);
+      await expect(registry.connect(user2).attestVerification(user2.address, false)).to.be.revertedWithCustomError(
+        registry,
+        "OwnableUnauthorizedAccount",
+      );
+    });
+
+    it("Should reject attesting an unregistered user", async function () {
+      await expect(registry.attestVerification(user2.address, true)).to.be.revertedWith("User not registered");
+    });
+  });
+
+  describe("autoVerifyOnSubmit toggle", function () {
+    it("Should not auto-verify when disabled", async function () {
+      await registry.setAutoVerifyOnSubmit(false);
+      await registry.connect(user2).submitProofHash(PROOF_HASH_2);
+      expect(await registry.isVerified(user2.address)).to.be.false;
+      expect(await registry.getProofCount(user2.address)).to.equal(1);
+    });
+
+    it("Should reject toggle from a non-owner", async function () {
+      await expect(registry.connect(user2).setAutoVerifyOnSubmit(false)).to.be.revertedWithCustomError(
+        registry,
+        "OwnableUnauthorizedAccount",
+      );
     });
   });
 

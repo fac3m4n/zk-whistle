@@ -32,13 +32,13 @@ const CreateListingPage: NextPage = () => {
     }
 
     try {
-      await createListing(descriptionHash, arweaveTxId, minimumBid || "0", isVerified ?? false);
+      await createListing(descriptionHash, arweaveTxId, minimumBid || "0");
       notification.success("Listing created successfully!");
       router.push("/marketplace");
     } catch (err) {
       notification.error(`Failed to create listing: ${err instanceof Error ? err.message : "Unknown error"}`);
     }
-  }, [descriptionHash, arweaveTxId, minimumBid, isVerified, createListing, router]);
+  }, [descriptionHash, arweaveTxId, minimumBid, createListing, router]);
 
   if (!address) {
     return (

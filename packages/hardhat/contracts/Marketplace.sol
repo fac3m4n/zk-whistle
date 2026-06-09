@@ -2,6 +2,13 @@
 pragma solidity >=0.8.0 <0.9.0;
 
 /**
+ * @notice Minimal view into the WhistleblowerRegistry used to source verified status.
+ */
+interface IWhistleblowerRegistry {
+    function isVerified(address user) external view returns (bool);
+}
+
+/**
  * @title Marketplace
  * @notice Anonymous information marketplace where whistleblowers list encrypted
  * data and journalists place bids. When a bid is accepted, funds are sent
@@ -45,6 +52,9 @@ contract Marketplace {
     uint256 public constant PLATFORM_FEE_BPS = 250;
     address public immutable feeRecipient;
 
+    /// @notice Registry consulted for a whistleblower's verified (credibility) status.
+    IWhistleblowerRegistry public immutable registry;
+
     // -------------------------------------------------------
     // Events
     // -------------------------------------------------------
@@ -70,10 +80,13 @@ contract Marketplace {
 
     /**
      * @param _feeRecipient Address that receives platform fees.
+     * @param _registry WhistleblowerRegistry used to determine verified status.
      */
-    constructor(address _feeRecipient) {
+    constructor(address _feeRecipient, address _registry) {
         require(_feeRecipient != address(0), "Invalid fee recipient");
+        require(_registry != address(0), "Invalid registry");
         feeRecipient = _feeRecipient;
+        registry = IWhistleblowerRegistry(_registry);
     }
 
     // -------------------------------------------------------
@@ -82,16 +95,16 @@ contract Marketplace {
 
     /**
      * @notice Create a new listing for encrypted information.
+     * @dev The verified flag is read from the registry for the caller and cannot be
+     *      self-asserted, so a "Verified Source" badge always reflects on-chain reputation.
      * @param _descriptionHash IPFS/Arweave hash of the encrypted description.
      * @param _arweaveTxId Arweave TX ID of the encrypted payload.
      * @param _minimumBid Minimum bid amount in wei.
-     * @param _isVerified Whether the whistleblower has verified identity proofs.
      */
     function createListing(
         string calldata _descriptionHash,
         string calldata _arweaveTxId,
-        uint256 _minimumBid,
-        bool _isVerified
+        uint256 _minimumBid
     ) external returns (uint256) {
         require(bytes(_descriptionHash).length > 0, "Description hash required");
         require(bytes(_arweaveTxId).length > 0, "Arweave TX ID required");
@@ -103,7 +116,7 @@ contract Marketplace {
             arweaveTxId: _arweaveTxId,
             minimumBid: _minimumBid,
             isActive: true,
-            isVerified: _isVerified,
+            isVerified: registry.isVerified(msg.sender),
             createdAt: block.timestamp,
             bidCount: 0
         });

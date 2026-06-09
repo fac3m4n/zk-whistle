@@ -10,9 +10,11 @@ const deployWhistleblowerRegistry: DeployFunction = async function (hre: Hardhat
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
+  // autoVerifyOnSubmit = true for local/dev convenience. Disable in production and
+  // rely on attestVerification() once a real Reclaim proof validator is in place.
   await deploy("WhistleblowerRegistry", {
     from: deployer,
-    args: [],
+    args: [true],
     log: true,
     autoMine: true,
   });

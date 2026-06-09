@@ -1,74 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   buildDeadMansSwitchACC,
   decryptKeyFromLit,
-  disconnectLitClient,
   encryptKeyWithLit,
-  initLitClient,
+  getDecryptAuthContext,
+  isLitSupportedChain,
+  litChainNameFromId,
 } from "~~/services/zk-whistle/litProtocol";
 import type { LitAccessControlCondition, LitEncryptedKey } from "~~/types/zk-whistle";
 
 type LitProtocolState = {
-  isConnected: boolean;
   isEncrypting: boolean;
   isDecrypting: boolean;
   error: string | null;
 };
 
 /**
- * React hook for Lit Protocol key management.
- * Manages the Lit client lifecycle and provides encrypt/decrypt operations.
+ * React hook for Lit Protocol key management (SDK v8 / Naga).
+ *
+ * Connection is lazy: the Naga client is created on first encrypt/decrypt call,
+ * not on mount, so pages that never use Lit don't pay the handshake cost.
  */
 export function useLitProtocol() {
   const [state, setState] = useState<LitProtocolState>({
-    isConnected: false,
     isEncrypting: false,
     isDecrypting: false,
     error: null,
   });
 
-  // Auto-connect on mount
-  useEffect(() => {
-    let mounted = true;
-
-    const connect = async () => {
-      try {
-        await initLitClient();
-        if (mounted) {
-          setState(prev => ({ ...prev, isConnected: true }));
-        }
-      } catch (err) {
-        if (mounted) {
-          setState(prev => ({
-            ...prev,
-            error: `Lit connection failed: ${err instanceof Error ? err.message : "Unknown error"}`,
-          }));
-        }
-      }
-    };
-
-    connect();
-
-    return () => {
-      mounted = false;
-      disconnectLitClient();
-    };
-  }, []);
-
-  /**
-   * Encrypt an AES key using Lit Protocol ACCs.
-   */
+  /** Encrypt an AES key under the given conditions on a Lit-supported `chain`. */
   const encryptKey = useCallback(
     async (
       symmetricKey: Uint8Array,
       accessControlConditions: LitAccessControlCondition[],
+      chain: string,
     ): Promise<LitEncryptedKey | null> => {
       setState(prev => ({ ...prev, isEncrypting: true, error: null }));
-
       try {
-        const result = await encryptKeyWithLit(symmetricKey, accessControlConditions);
+        const result = await encryptKeyWithLit(symmetricKey, accessControlConditions, chain);
         setState(prev => ({ ...prev, isEncrypting: false }));
         return result;
       } catch (err) {
@@ -80,20 +51,17 @@ export function useLitProtocol() {
     [],
   );
 
-  /**
-   * Decrypt an AES key from Lit Protocol.
-   */
+  /** Decrypt an AES key from Lit using a wallet-authenticated `authContext`. */
   const decryptKey = useCallback(
     async (
       encryptedKey: LitEncryptedKey,
       accessControlConditions: LitAccessControlCondition[],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      sessionSigs: Record<string, any>,
+      authContext: unknown,
+      chain: string,
     ): Promise<Uint8Array | null> => {
       setState(prev => ({ ...prev, isDecrypting: true, error: null }));
-
       try {
-        const result = await decryptKeyFromLit(encryptedKey, accessControlConditions, sessionSigs);
+        const result = await decryptKeyFromLit(encryptedKey, accessControlConditions, authContext, chain);
         setState(prev => ({ ...prev, isDecrypting: false }));
         return result;
       } catch (err) {
@@ -110,5 +78,8 @@ export function useLitProtocol() {
     encryptKey,
     decryptKey,
     buildDeadMansSwitchACC,
+    getDecryptAuthContext,
+    isLitSupportedChain,
+    litChainNameFromId,
   };
 }

@@ -93,6 +93,25 @@ export async function decryptPayload(payload: EncryptedPayload, rawKey: Uint8Arr
   return decryptData(payload.ciphertext, payload.iv, key);
 }
 
+/** Encode raw bytes to a base64 string (browser-safe). */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+/** Decode a base64 string back into raw bytes. */
+export function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 /**
  * Serialize an EncryptedPayload into a single Uint8Array for storage.
  * Format: [4 bytes IV length][IV][ciphertext]

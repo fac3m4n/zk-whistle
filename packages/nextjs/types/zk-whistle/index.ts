@@ -48,13 +48,24 @@ export type ArweavePayloadMetadata = {
 // Lit Protocol Types
 // -------------------------------------------------------
 
-/** A single Lit Protocol Access Control Condition (EVM contract call) */
+/**
+ * A single Lit Protocol EVM-contract access control condition (SDK v8 shape).
+ * Structurally matches `@lit-protocol/accs-schemas` LPACC_EVM_CONTRACT.
+ */
 export type LitAccessControlCondition = {
+  conditionType?: string; // "evmContract" for custom contract calls
   contractAddress: string;
-  standardContractType: string;
-  chain: string;
-  method: string;
-  parameters: string[];
+  chain: string; // must be a Lit-supported chain name
+  functionName: string;
+  functionParams: string[];
+  functionAbi: {
+    name: string;
+    type?: string;
+    stateMutability: string;
+    constant?: boolean;
+    inputs: { name: string; type: string; internalType?: string }[];
+    outputs: { name: string; type: string; internalType?: string }[];
+  };
   returnValueTest: {
     key: string;
     comparator: string;
@@ -66,6 +77,7 @@ export type LitAccessControlCondition = {
 export type LitEncryptedKey = {
   ciphertext: string; // base64 encrypted symmetric key
   dataToEncryptHash: string; // hash of the data that was encrypted
+  chain: string; // Lit chain the access-control conditions read from
 };
 
 /** Result of the full vault creation flow */
@@ -74,6 +86,32 @@ export type VaultCreationResult = {
   litEncryptedKey: LitEncryptedKey;
   accessControlConditions: LitAccessControlCondition[];
   switchTxHash: string; // on-chain transaction hash
+};
+
+/**
+ * Self-describing payload stored on Arweave for a vault. Contains everything a
+ * recipient needs to decrypt once the Dead Man's Switch triggers — except the
+ * plaintext, which never exists outside the creator's browser.
+ *
+ * `payload` is the AES-256-GCM ciphertext of the file. `lit` is the AES key
+ * sealed by Lit under the on-chain access-control conditions; it is `null` when
+ * the vault was created on a non-Lit-supported chain (creation-pipeline demo
+ * only — no key escrow, data is not recoverable).
+ */
+export type VaultManifest = {
+  version: string;
+  app: "ZK-Whistle";
+  encryption: "AES-256-GCM";
+  file: { name: string; mimeType: string; size: number; encryptedAt: number };
+  payload: { iv: string; ciphertext: string }; // base64
+  lit: {
+    network: string;
+    chain: string;
+    ciphertext: string; // Lit-sealed AES key
+    dataToEncryptHash: string;
+    accessControlConditions: LitAccessControlCondition[];
+  } | null;
+  recipient: string;
 };
 
 // -------------------------------------------------------
@@ -194,7 +232,7 @@ export type AsyncOperationState<T = undefined> = {
 };
 
 /** Steps in the vault creation wizard */
-export type VaultCreationStep = "select-file" | "encrypt" | "upload" | "set-conditions" | "register";
+export type VaultCreationStep = "select-file" | "set-conditions" | "register";
 
 /** Overall app navigation context */
 export type AppSection = "vault" | "identity" | "marketplace";

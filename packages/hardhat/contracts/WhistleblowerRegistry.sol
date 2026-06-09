@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
 /**
  * @title WhistleblowerRegistry
  * @notice Stores hashes of Reclaim Protocol zkTLS proofs on-chain to establish
@@ -8,9 +10,22 @@ pragma solidity >=0.8.0 <0.9.0;
  * verify that a source has cryptographic proof of employment/access
  * by checking the proof hashes stored here against the off-chain JSON proofs.
  * @dev Only proof hashes (bytes32) are stored on-chain. The full Reclaim JSON
- * proof lives off-chain (IPFS/Arweave) and is verified client-side.
+ * proof lives off-chain (IPFS/Arweave) and is verified off-chain.
+ *
+ * Trust model for `isVerified`:
+ * The EVM cannot (cheaply) re-run a Reclaim zkTLS proof, so on-chain code cannot
+ * by itself prove that a submitted `proofHash` corresponds to a valid proof.
+ * Two verification modes are therefore supported:
+ *   1. Attested mode (recommended for production): an authorized verifier — the
+ *      contract owner, representing an off-chain validator or a Lit Action that
+ *      actually checks the Reclaim witness signatures — calls
+ *      {attestVerification}. `isVerified` reflects that explicit attestation.
+ *   2. Trust-on-submit mode (development/demo convenience): when
+ *      {autoVerifyOnSubmit} is enabled, a user is marked verified as soon as
+ *      they record any proof hash. This is NOT a cryptographic guarantee and
+ *      should be disabled in production.
  */
-contract WhistleblowerRegistry {
+contract WhistleblowerRegistry is Ownable {
     // -------------------------------------------------------
     // Types
     // -------------------------------------------------------
@@ -35,6 +50,10 @@ contract WhistleblowerRegistry {
     /// @notice Prevent duplicate proof submission
     mapping(bytes32 => bool) public proofHashExists;
 
+    /// @notice When true, the first recorded proof hash trust-marks the user as
+    /// verified without an explicit attestation. Convenience for dev/demo only.
+    bool public autoVerifyOnSubmit;
+
     // -------------------------------------------------------
     // Events
     // -------------------------------------------------------
@@ -44,6 +63,21 @@ contract WhistleblowerRegistry {
     event VerificationUpdated(address indexed user, bool isVerified);
 
     event StealthMetaAddressUpdated(address indexed user);
+
+    event AutoVerifyConfigured(bool enabled);
+
+    // -------------------------------------------------------
+    // Constructor
+    // -------------------------------------------------------
+
+    /**
+     * @param _autoVerifyOnSubmit Enable trust-on-submit verification (dev/demo). Set
+     *        false in production and use {attestVerification} instead.
+     */
+    constructor(bool _autoVerifyOnSubmit) Ownable(msg.sender) {
+        autoVerifyOnSubmit = _autoVerifyOnSubmit;
+        emit AutoVerifyConfigured(_autoVerifyOnSubmit);
+    }
 
     // -------------------------------------------------------
     // Write Functions
@@ -58,22 +92,43 @@ contract WhistleblowerRegistry {
         require(_proofHash != bytes32(0), "Invalid proof hash");
         require(!proofHashExists[_proofHash], "Proof already submitted");
 
-        if (!hasRegistered[msg.sender]) {
-            registeredUsers.push(msg.sender);
-            hasRegistered[msg.sender] = true;
-            profiles[msg.sender].registeredAt = block.timestamp;
-        }
+        _ensureRegistered(msg.sender);
 
         profiles[msg.sender].proofHashes.push(_proofHash);
         proofHashExists[_proofHash] = true;
 
-        // Auto-verify once at least one proof is submitted
-        if (!profiles[msg.sender].isVerified) {
+        // Trust-on-submit verification (dev/demo only — see contract-level docs).
+        if (autoVerifyOnSubmit && !profiles[msg.sender].isVerified) {
             profiles[msg.sender].isVerified = true;
             emit VerificationUpdated(msg.sender, true);
         }
 
         emit ProofSubmitted(msg.sender, _proofHash, block.timestamp);
+    }
+
+    /**
+     * @notice Authoritatively set a user's verified status after their proof has
+     * been validated off-chain (or by a Lit Action acting as the verifier).
+     * @dev Restricted to the owner/verifier. This is the production path that gives
+     * `isVerified` real meaning, independent of {autoVerifyOnSubmit}.
+     * @param _user The whistleblower whose status is being attested.
+     * @param _status True to mark verified, false to revoke.
+     */
+    function attestVerification(address _user, bool _status) external onlyOwner {
+        require(hasRegistered[_user], "User not registered");
+        if (profiles[_user].isVerified != _status) {
+            profiles[_user].isVerified = _status;
+            emit VerificationUpdated(_user, _status);
+        }
+    }
+
+    /**
+     * @notice Toggle trust-on-submit verification. Should be disabled in production.
+     * @param _enabled New value for {autoVerifyOnSubmit}.
+     */
+    function setAutoVerifyOnSubmit(bool _enabled) external onlyOwner {
+        autoVerifyOnSubmit = _enabled;
+        emit AutoVerifyConfigured(_enabled);
     }
 
     /**
@@ -83,14 +138,21 @@ contract WhistleblowerRegistry {
     function setStealthMetaAddress(string calldata _stealthMetaAddress) external {
         require(bytes(_stealthMetaAddress).length > 0, "Empty meta-address");
 
-        if (!hasRegistered[msg.sender]) {
-            registeredUsers.push(msg.sender);
-            hasRegistered[msg.sender] = true;
-            profiles[msg.sender].registeredAt = block.timestamp;
-        }
+        _ensureRegistered(msg.sender);
 
         profiles[msg.sender].stealthMetaAddress = _stealthMetaAddress;
         emit StealthMetaAddressUpdated(msg.sender);
+    }
+
+    /**
+     * @dev Register a user on first interaction so enumeration and timestamps are tracked.
+     */
+    function _ensureRegistered(address _user) private {
+        if (!hasRegistered[_user]) {
+            registeredUsers.push(_user);
+            hasRegistered[_user] = true;
+            profiles[_user].registeredAt = block.timestamp;
+        }
     }
 
     // -------------------------------------------------------

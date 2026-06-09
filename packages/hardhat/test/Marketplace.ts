@@ -1,9 +1,10 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Marketplace } from "../typechain-types";
+import { Marketplace, WhistleblowerRegistry } from "../typechain-types";
 
 describe("Marketplace", function () {
   let marketplace: Marketplace;
+  let registry: WhistleblowerRegistry;
   let feeRecipient: Awaited<ReturnType<typeof ethers.getSigners>>[0];
   let whistleblower: Awaited<ReturnType<typeof ethers.getSigners>>[0];
   let journalist: Awaited<ReturnType<typeof ethers.getSigners>>[0];
@@ -13,11 +14,17 @@ describe("Marketplace", function () {
   const ARWEAVE_TX = "arweave_tx_payload_456";
   const MIN_BID = ethers.parseEther("0.1");
   const BID_AMOUNT = ethers.parseEther("1.0");
+  const PROOF_HASH = ethers.keccak256(ethers.toUtf8Bytes("wb_proof"));
 
   beforeEach(async () => {
     [feeRecipient, whistleblower, journalist, stealthAddr] = await ethers.getSigners();
+
+    const registryFactory = await ethers.getContractFactory("WhistleblowerRegistry");
+    registry = (await registryFactory.deploy(true)) as WhistleblowerRegistry;
+    await registry.waitForDeployment();
+
     const factory = await ethers.getContractFactory("Marketplace");
-    marketplace = (await factory.deploy(feeRecipient.address)) as Marketplace;
+    marketplace = (await factory.deploy(feeRecipient.address, await registry.getAddress())) as Marketplace;
     await marketplace.waitForDeployment();
   });
 
@@ -26,9 +33,20 @@ describe("Marketplace", function () {
       expect(await marketplace.feeRecipient()).to.equal(feeRecipient.address);
     });
 
+    it("Should set the registry", async function () {
+      expect(await marketplace.registry()).to.equal(await registry.getAddress());
+    });
+
     it("Should reject zero address fee recipient", async function () {
       const factory = await ethers.getContractFactory("Marketplace");
-      await expect(factory.deploy(ethers.ZeroAddress)).to.be.revertedWith("Invalid fee recipient");
+      await expect(factory.deploy(ethers.ZeroAddress, await registry.getAddress())).to.be.revertedWith(
+        "Invalid fee recipient",
+      );
+    });
+
+    it("Should reject zero address registry", async function () {
+      const factory = await ethers.getContractFactory("Marketplace");
+      await expect(factory.deploy(feeRecipient.address, ethers.ZeroAddress)).to.be.revertedWith("Invalid registry");
     });
 
     it("Should have PLATFORM_FEE_BPS of 250", async function () {
@@ -37,8 +55,10 @@ describe("Marketplace", function () {
   });
 
   describe("createListing", function () {
-    it("Should create a listing with correct parameters", async function () {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true);
+    it("Should reflect verified status read from the registry", async function () {
+      // Whistleblower becomes verified by submitting a proof (auto-verify enabled).
+      await registry.connect(whistleblower).submitProofHash(PROOF_HASH);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
 
       const listing = await marketplace.getListing(0);
       expect(listing.whistleblower).to.equal(whistleblower.address);
@@ -49,26 +69,32 @@ describe("Marketplace", function () {
       expect(listing.isVerified).to.be.true;
     });
 
+    it("Should mark unverified whistleblowers as not verified", async function () {
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
+      const listing = await marketplace.getListing(0);
+      expect(listing.isVerified).to.be.false;
+    });
+
     it("Should emit ListingCreated event", async function () {
-      await expect(marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true))
+      await expect(marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID))
         .to.emit(marketplace, "ListingCreated")
         .withArgs(0, whistleblower.address, DESC_HASH, MIN_BID);
     });
 
     it("Should increment listing count", async function () {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, false);
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, false);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
       expect(await marketplace.listingCount()).to.equal(2);
     });
 
     it("Should reject empty description hash", async function () {
-      await expect(marketplace.connect(whistleblower).createListing("", ARWEAVE_TX, MIN_BID, false)).to.be.revertedWith(
+      await expect(marketplace.connect(whistleblower).createListing("", ARWEAVE_TX, MIN_BID)).to.be.revertedWith(
         "Description hash required",
       );
     });
 
     it("Should reject empty Arweave TX ID", async function () {
-      await expect(marketplace.connect(whistleblower).createListing(DESC_HASH, "", MIN_BID, false)).to.be.revertedWith(
+      await expect(marketplace.connect(whistleblower).createListing(DESC_HASH, "", MIN_BID)).to.be.revertedWith(
         "Arweave TX ID required",
       );
     });
@@ -76,7 +102,7 @@ describe("Marketplace", function () {
 
   describe("placeBid", function () {
     beforeEach(async () => {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
     });
 
     it("Should place a bid with correct amount", async function () {
@@ -117,7 +143,7 @@ describe("Marketplace", function () {
 
   describe("acceptBid", function () {
     beforeEach(async () => {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
       await marketplace.connect(journalist).placeBid(0, { value: BID_AMOUNT });
     });
 
@@ -175,7 +201,7 @@ describe("Marketplace", function () {
 
   describe("withdrawBid", function () {
     beforeEach(async () => {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
       await marketplace.connect(journalist).placeBid(0, { value: BID_AMOUNT });
     });
 
@@ -212,7 +238,7 @@ describe("Marketplace", function () {
 
   describe("deactivateListing", function () {
     beforeEach(async () => {
-      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID, true);
+      await marketplace.connect(whistleblower).createListing(DESC_HASH, ARWEAVE_TX, MIN_BID);
     });
 
     it("Should deactivate listing", async function () {

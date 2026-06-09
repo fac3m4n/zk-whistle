@@ -15,15 +15,16 @@ export function useMarketplace() {
   const { writeContractAsync: writeMarketplaceAsync, isPending: isWritePending } =
     useScaffoldWriteContract("Marketplace");
 
+  // Verified status is read from the WhistleblowerRegistry on-chain inside createListing,
+  // so it is intentionally not passed by the caller.
   const createListing = async (
     descriptionHash: string,
     arweaveTxId: string,
     minimumBid: string, // ETH amount as string
-    isVerified: boolean,
   ) => {
     return writeMarketplaceAsync({
       functionName: "createListing",
-      args: [descriptionHash, arweaveTxId, parseEther(minimumBid), isVerified],
+      args: [descriptionHash, arweaveTxId, parseEther(minimumBid)],
     });
   };
 
