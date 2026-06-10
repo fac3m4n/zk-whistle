@@ -18,7 +18,7 @@ const scaffoldConfig = {
   // Base Sepolia is included because it is a Lit-supported chain — required to
   // exercise the real Lit key-gating / release flow (see README "Lit network
   // requirement"). Users switch networks via the header dropdown.
-  targetNetworks: [chains.hardhat, chains.baseSepolia],
+  targetNetworks: [chains.baseSepolia],
   // The interval at which your front-end polls the RPC servers for new data (it has no effect if you only target the local network (default is 4000))
   pollingInterval: 3000,
   // This is ours Alchemy's default API key.

@@ -13,7 +13,7 @@ type IrysUploadState = {
 };
 
 /**
- * React hook for uploading and fetching encrypted payloads to/from Arweave via Irys.
+ * React hook for uploading and fetching encrypted payloads to/from Arweave.
  */
 export function useIrysUpload() {
   const [state, setState] = useState<IrysUploadState>({
@@ -27,35 +27,29 @@ export function useIrysUpload() {
   /**
    * Upload encrypted data to Arweave.
    */
-  const upload = useCallback(
-    async (
-      encryptedData: Uint8Array,
-      metadata: ArweavePayloadMetadata,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      walletProvider?: any,
-    ): Promise<string | null> => {
-      setState(prev => ({ ...prev, isUploading: true, error: null }));
+  const upload = useCallback(async (encryptedData: Uint8Array, metadata: ArweavePayloadMetadata): Promise<string> => {
+    setState(prev => ({ ...prev, isUploading: true, error: null }));
 
-      try {
-        const txId = await uploadToArweave(encryptedData, metadata, walletProvider);
-        setState(prev => ({
-          ...prev,
-          isUploading: false,
-          arweaveTxId: txId,
-        }));
-        return txId;
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Upload failed";
-        setState(prev => ({
-          ...prev,
-          isUploading: false,
-          error: message,
-        }));
-        return null;
-      }
-    },
-    [],
-  );
+    try {
+      const txId = await uploadToArweave(encryptedData, metadata);
+      setState(prev => ({
+        ...prev,
+        isUploading: false,
+        arweaveTxId: txId,
+      }));
+      return txId;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Upload failed";
+      setState(prev => ({
+        ...prev,
+        isUploading: false,
+        error: message,
+      }));
+      // Re-throw so callers surface the real reason (network/server error)
+      // instead of a generic "upload failed" message.
+      throw err instanceof Error ? err : new Error(message);
+    }
+  }, []);
 
   /**
    * Fetch encrypted data from Arweave.

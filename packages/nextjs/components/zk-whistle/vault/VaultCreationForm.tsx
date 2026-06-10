@@ -34,10 +34,10 @@ async function shortHash(bytes: Uint8Array): Promise<string> {
 /**
  * Multi-step vault creation wizard.
  * Pipeline: encrypt file (AES, in FileEncryptor) -> seal AES key with Lit ->
- * upload self-describing manifest to Arweave (Irys) -> register on-chain.
+ * upload self-describing manifest to Arweave -> register on-chain.
  */
 export const VaultCreationForm = () => {
-  const { address, connector } = useAccount();
+  const { address } = useAccount();
   const { targetNetwork } = useTargetNetwork();
   const { data: deadMansSwitch } = useDeployedContractInfo({ contractName: "DeadMansSwitch" });
   const { createSwitch, isWritePending } = useDeadMansSwitch(address);
@@ -110,22 +110,13 @@ export const VaultCreationForm = () => {
       };
       const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
 
-      // 3) Persist. Real networks -> Arweave via Irys. Local/unsupported chains
-      //    skip Irys (its funding requires a public chain) and use a content-hash
-      //    reference so the on-chain registration step is still demoable.
+      // 3) Persist. Lit-supported chains upload the manifest to Arweave (Turbo,
+      //    via the /api/storage route). Local/unsupported chains skip storage and
+      //    use a content-hash reference so registration is still demoable.
       let arweaveTxId: string;
       if (litEnabled) {
-        setProgress("Uploading encrypted vault to Arweave (Irys)...");
-        const provider = await connector?.getProvider();
-        const txId = await upload(
-          manifestBytes,
-          { fileName, mimeType, encryptedAt: Date.now(), version: "1" },
-          provider,
-        );
-        if (!txId) {
-          throw new Error("Arweave upload failed. Ensure your wallet has funds on the active network.");
-        }
-        arweaveTxId = txId;
+        setProgress("Uploading encrypted vault to Arweave...");
+        arweaveTxId = await upload(manifestBytes, { fileName, mimeType, encryptedAt: Date.now(), version: "1" });
       } else {
         arweaveTxId = `local-preview:${await shortHash(manifestBytes)}`;
       }
@@ -163,7 +154,6 @@ export const VaultCreationForm = () => {
     encryptKey,
     fileName,
     mimeType,
-    connector,
     upload,
     getArweaveUrl,
     createSwitch,

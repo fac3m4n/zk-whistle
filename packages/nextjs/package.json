@@ -16,9 +16,8 @@
     "vercel:yolo": "vercel --build-env YARN_ENABLE_IMMUTABLE_INSTALLS=false --build-env ENABLE_EXPERIMENTAL_COREPACK=1 --build-env NEXT_PUBLIC_IGNORE_BUILD_ERROR=true --build-env VERCEL_TELEMETRY_DISABLED=1"
   },
   "dependencies": {
+    "@ardrive/turbo-sdk": "^1.41.3",
     "@heroicons/react": "~2.1.5",
-    "@irys/web-upload": "^0.0.15",
-    "@irys/web-upload-ethereum": "^0.0.16",
     "@lit-protocol/auth": "^8.2.3",
     "@lit-protocol/constants": "^9.0.1",
     "@lit-protocol/lit-client": "^8.3.1",
