@@ -1,0 +1,206 @@
+\chapter{State of the Art}
+\label{ch:related}
+
+This chapter surveys the systems and protocols that address parts of the problem
+\zkw tackles, and positions the present work relative to them. It is organised by
+sub-problem: first the established whistleblowing platforms, then dead-man's-switch
+implementations, decentralised key-management networks, and provenance
+technologies. It closes with a critical look at the project's own earlier
+TEE-based design and a gap analysis that motivates the architecture of
+Chapter~\ref{ch:architecture}.
+
+\section{Whistleblowing and Secure Submission Platforms}
+\label{sec:rel-platforms}
+
+The most widely deployed tools for receiving sensitive disclosures are
+\emph{SecureDrop}~\cite{securedrop} and \emph{GlobaLeaks}~\cite{globaleaks}.
+SecureDrop, maintained by the Freedom of the Press Foundation, is an open-source
+submission system run by individual news organisations: a source connects over
+Tor to an organisation's instance and uploads documents, which journalists
+retrieve from an air-gapped viewing station. GlobaLeaks is a more general
+software framework for building anonymous reporting initiatives, used by
+anti-corruption NGOs and public bodies.
+
+These platforms are mature and have a strong operational-security track record,
+and they solve a genuinely hard problem: getting material from a source to a
+journalist without exposing the source's network identity. They are, however,
+\emph{custodial} and \emph{organisation-bound} by design. Each instance is run by
+a specific organisation that operates the servers, holds the submitted material,
+and is the locus of trust. This produces three limitations that \zkw is built to
+overcome. First, the organisation is a single point of failure: it can be
+compromised, subpoenaed, or shut down, and its operational security is only as
+good as its staff and infrastructure. Second, these systems address the
+\emph{transmission} of evidence, not the \emph{vulnerable interval}---they offer
+no mechanism to release evidence automatically if a source is silenced before
+they choose to submit. Third, they offer no notion of \emph{verifiable
+provenance} for an anonymous source and no mechanism for \emph{anonymous reward};
+credibility is established, if at all, through out-of-band journalistic
+verification.
+
+WikiLeaks popularised the use of an ``insurance file''---a large encrypted blob
+released publicly in advance, with the decryption key withheld and released only
+if something happened to the organisation. This is a manual, all-or-nothing dead
+man's switch whose key custody rests entirely on a single human decision. It
+illustrates both the demand for the mechanism this thesis automates and the
+fragility of doing it by hand.
+
+\section{Dead Man's Switch Implementations}
+\label{sec:rel-dms}
+
+Digital dead-man's-switch services have existed for years in centralised form:
+``email this for me if I don't log in for 30 days'' products that depend entirely
+on the operator's honesty and survival. They reproduce the custodial problem in
+its purest form and are out of scope as serious protections.
+
+On-chain implementations are more interesting. \emph{Sarcophagus}~\cite{sarcophagus}
+is a decentralised dead-man's-switch protocol on Ethereum that uses Arweave for
+permanent storage---a design this thesis draws inspiration from. In Sarcophagus, a
+user (the ``embalmer'') encrypts a file in two layers: an inner layer for the
+ultimate recipient and an outer layer for a staked node operator (an
+``archaeologist''). If the user fails to ``re-wrap'' (check in) before a
+resurrection time, the archaeologist removes the outer layer, publishing the
+inner-encrypted file for the recipient to decrypt. Sarcophagus pioneered the
+combination of on-chain trigger logic with permanent storage, but it carries two
+drawbacks for the present use case. Its security relies on an \emph{economic}
+incentive model with its own token (\$SARCO): the user must keep paying node
+operators, and a lapse in payment can cause the switch to fail or the data to be
+lost. And its proxy-re-encryption-style flow is oriented toward a \emph{known
+recipient} rather than a public or as-yet-unknown future journalist.
+
+Hackathon prototypes such as ETHGlobal's ``Deadman Switch''~\cite{ethglobalDeadman}
+demonstrate the heartbeat pattern---an on-chain timestamp updated by a periodic
+\texttt{checkIn()} and an \texttt{isDeceased()} predicate---which \zkw adopts and
+generalises. What these prototypes typically lack is a credible answer to key
+custody (they often hand-wave the decryption step) and any treatment of
+provenance or anonymous reward.
+
+\zkw differs from all of the above in that it decouples the four concerns---trigger,
+key custody, provenance, and reward---and assigns each to a purpose-built
+decentralised primitive, rather than bundling them into a single token-incentivised
+protocol or leaving key custody unspecified.
+
+\section{Decentralised Key-Management Networks}
+\label{sec:rel-keymgmt}
+
+The hardest sub-problem is conditional key custody: who holds the decryption key,
+and what convinces them to release it. Three families of solution exist.
+
+\textbf{Trusted execution environments}, discussed in Section~\ref{sec:bg-tee},
+seal the key in hardware. This is the approach of the project's V1 and is rejected
+for the reasons given there and revisited in Section~\ref{sec:rel-v1}.
+
+\textbf{Proxy re-encryption (PRE) networks}, exemplified by the \emph{Threshold
+Network} (the merger of NuCypher and Keep)~\cite{thresholdNetwork, nucypher},
+distribute re-encryption keys across nodes via secret sharing. The data owner
+encrypts to their own public key; when access is granted, the network transforms
+the ciphertext so that it is decryptable by a designated recipient, without any
+node ever seeing the plaintext. PRE is mathematically elegant and genuinely
+non-custodial, but it is fundamentally \emph{point-to-point}: the recipient must
+generally be known, with a public key, \emph{at encryption time}. A dead man's
+switch for whistleblowing frequently needs to release to the \emph{public} or to
+an unknown future journalist, which fits PRE poorly.
+
+\textbf{Programmable threshold key management}, exemplified by the \emph{Lit
+Protocol}~\cite{litprotocol}, is the family this thesis adopts. Lit is a
+decentralised network whose nodes hold key shares (using threshold BLS) and that
+exposes two relevant capabilities. \emph{Access Control Conditions} (ACCs) let
+data be encrypted such that the network will only release the decryption shares
+when a specified condition holds---including arbitrary on-chain state, such as
+the return value of a contract call. \emph{Lit Actions} are immutable JavaScript
+programs that can express richer release logic. For a dead man's switch, the ACC
+simply requires that \texttt{DeadMansSwitch.isDeceased(user)} return true. Unlike
+PRE, this naturally supports release to the public (the condition, not a specific
+recipient's key, gates access); unlike a TEE, the key is split across a network
+and its security is threshold-cryptographic. Lit's developer-facing SDK abstracts
+the MPC so that an application can encrypt and decrypt against conditions without
+implementing the threshold protocol itself, which is what makes it usable as the
+key-management layer of this project.
+
+It must be noted---and Chapter~\ref{ch:evaluation} treats this directly---that
+Lit's own technology has evolved during the lifetime of this work. The network
+generation used here (Naga, via the v8 SDK) preserves the multi-party-computation
+model the thesis argues for, whereas a newer Lit runtime reintroduces TEE-based
+execution. The design deliberately targets the MPC path.
+
+\section{Provenance and Reputation Technologies}
+\label{sec:rel-provenance}
+
+Establishing the credibility of an anonymous claim without identity is a newer
+capability. As described in Section~\ref{sec:bg-zk}, \emph{Reclaim
+Protocol}~\cite{reclaim} uses zkTLS to turn any authenticated HTTPS session into a
+selective, zero-knowledge proof of its contents. This is the first widely
+available technology that lets a source prove ``I am an active employee of
+organisation X'' or ``I control this account'' without revealing their identity,
+and it is the provenance layer adopted here. \emph{ZK-Email}~\cite{zkemail}
+provides a complementary capability by proving properties of DKIM-signed emails in
+zero knowledge---for instance, that one received an email from a specific
+corporate domain---which is a natural future extension.
+
+Earlier reputation systems on-chain were either identity-bound (defeating
+anonymity) or based on token holdings and social graphs (not evidence of
+insider access). Reclaim and ZK-Email are distinctive in producing
+\emph{verifiable, identity-free} evidence of a real-world relationship, which is
+exactly the signal a journalist needs to triage anonymous tips.
+
+\section{The V1 Design and Its Limitations}
+\label{sec:rel-v1}
+
+The immediate predecessor of this work used Intel SGX, accessed through the iExec
+decentralised-computing network, to hold decryption keys for the dead man's
+switch. The intent was sound---move key custody off any single human or
+server---but the realisation embeds the trust in hardware. As
+Section~\ref{sec:bg-tee} detailed, this is vulnerable to side-channel and
+transient-execution attacks (Foreshadow, SGAxe), depends on a single chip
+vendor's attestation infrastructure as a centralised root of trust, and ties
+liveness to a narrow set of specialised nodes. Comparative analyses of
+confidential-computing technologies reach the same
+conclusion~\cite{phalaTeeMpc}: TEEs offer excellent performance and a simple
+programming model, but for adversaries capable of physical or supply-chain
+attacks they are a weaker guarantee than distributed cryptography. The decision to
+re-architect around threshold cryptography is the direct response to this
+analysis and the central thesis of this work.
+
+\section{Gap Analysis and Positioning}
+\label{sec:rel-gap}
+
+Table~\ref{tab:rel-gap} summarises the landscape against the four capabilities
+that a complete confidential-whistleblowing system requires: an autonomous
+release trigger, non-hardware key custody, identity-free provenance, and
+unlinkable reward.
+
+\begin{table}[htbp]
+\centering
+\caption{Capability comparison of related systems.}
+\label{tab:rel-gap}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{System} & \textbf{Auto.} & \textbf{Non-HW key} & \textbf{ZK} & \textbf{Unlinkable} \\
+ & \textbf{trigger} & \textbf{custody} & \textbf{provenance} & \textbf{reward} \\
+\midrule
+SecureDrop / GlobaLeaks      & No  & N/A (custodial)      & No  & No  \\
+WikiLeaks insurance file     & Manual & No (human)        & No  & No  \\
+Sarcophagus                  & Yes & Economic / staked    & No  & No  \\
+ETHGlobal DMS prototypes     & Yes & Unspecified          & No  & No  \\
+Threshold Network (PRE)      & Partial & Yes (point-to-point) & No & No \\
+Project V1 (iExec / SGX)     & Yes & No (hardware TEE)    & No  & No  \\
+\textbf{\zkwns (this work)}  & \textbf{Yes} & \textbf{Yes (MPC/TSS)} & \textbf{Yes} & \textbf{Yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+No existing system addresses all four capabilities together. SecureDrop and
+GlobaLeaks excel at secure transmission but are custodial and address neither the
+vulnerable interval nor provenance nor reward. Sarcophagus and the hackathon
+prototypes provide an autonomous trigger but with economic or unspecified key
+custody and no provenance or reward. PRE networks provide non-custodial keys but
+are point-to-point and silent on the other three concerns. The V1 design provides
+an autonomous trigger and decentralised \emph{computation} but anchors trust in
+hardware.
+
+The contribution of \zkw is to occupy the final row of
+Table~\ref{tab:rel-gap}: to combine an autonomous on-chain trigger, threshold
+(non-hardware) key custody, zero-knowledge provenance, and unlinkable reward into
+a single, internally consistent architecture, with a careful specification of the
+trust boundaries between the independent networks that provide each capability.
+The next chapter sets out that architecture.

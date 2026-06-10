@@ -1,0 +1,283 @@
+\chapter{Background and Theoretical Foundations}
+\label{ch:background}
+
+This chapter establishes the technical vocabulary and the theoretical results on
+which the rest of the thesis depends. It moves from the general (blockchains and
+smart contracts) to the specific primitives the system composes (authenticated
+encryption, elliptic-curve and threshold cryptography, zero-knowledge proofs,
+stealth addresses, and permanent storage), and finishes with the analysis of
+trusted execution environments that motivates the project's central design
+decision. A reader already fluent in applied cryptography and Ethereum
+development may skim this chapter and refer back to it as needed.
+
+\section{Blockchains, Ethereum, and Smart Contracts}
+\label{sec:bg-blockchain}
+
+A \emph{blockchain} is an append-only, replicated ledger maintained by a network
+of mutually distrusting nodes that reach agreement on its contents through a
+consensus protocol. Its defining property for this work is not its data
+structure but its \emph{trust model}: state transitions are validated
+independently by every participant against public rules, so that the correctness
+of the ledger does not depend on trusting any single operator. This is precisely
+the property a censorship-resistant system needs.
+
+Ethereum~\cite{buterin2014ethereum, wood2014ethereum} generalised the ledger
+into a \emph{world computer}. In addition to recording balances, Ethereum nodes
+run the \emph{Ethereum Virtual Machine} (EVM), a deterministic state machine that
+executes programs called \emph{smart contracts}. A smart contract is code,
+typically written in Solidity~\cite{solidity}, that is deployed to an address and
+thereafter executes exactly as written whenever a transaction calls it. Once
+deployed, a contract's logic is immutable (absent an explicit upgrade mechanism)
+and its execution is verified by the whole network. Contracts can hold and
+transfer the native currency (ether), maintain persistent storage, and emit
+\emph{events}---append-only log records that off-chain applications can index.
+
+Two characteristics of the EVM are central to this thesis. First, every
+operation costs \emph{gas}, a fee paid in ether that bounds computation and
+prevents denial-of-service; an efficient contract is therefore a cheaper
+contract, which makes minimising on-chain data a concrete engineering goal.
+Second, contract state is \emph{public}: anything written to storage or emitted
+as an event is visible to everyone. A privacy-preserving application must
+therefore be designed so that nothing sensitive is ever placed on-chain---only
+commitments, hashes, and references to data held elsewhere. This principle,
+``no plaintext on-chain'', recurs throughout the design.
+
+An \emph{externally owned account} (EOA) is controlled by a private key and is
+how human users transact. The Ethereum ecosystem has standardised many
+behaviours through \emph{Ethereum Requests for Comment} (ERCs); this work uses
+ERC-5564 (stealth addresses), discussed in Section~\ref{sec:bg-stealth}.
+
+\section{Symmetric Encryption and Authenticated Encryption}
+\label{sec:bg-aead}
+
+Confidentiality of the source's evidence rests on \emph{symmetric encryption}, in
+which the same secret key both encrypts and decrypts data. The system uses the
+\emph{Advanced Encryption Standard} (AES)~\cite{nistAES} with a 256-bit key,
+operating in \emph{Galois/Counter Mode} (GCM)~\cite{nistGCM}. GCM is an instance
+of \emph{authenticated encryption with associated data} (AEAD): in a single pass
+it provides both confidentiality (an adversary learns nothing about the
+plaintext) and integrity/authenticity (any tampering with the ciphertext is
+detected on decryption, which fails rather than returning corrupted plaintext).
+
+AEAD is the correct primitive here for two reasons. First, a released payload may
+have travelled through untrusted storage and untrusted networks before a
+journalist decrypts it; the authentication tag guarantees they are decrypting the
+exact bytes the source sealed, not a forgery. Second, GCM requires a unique
+\emph{initialization vector} (IV, also called a nonce) per encryption under a
+given key; reusing an IV in GCM is catastrophic, so the implementation generates
+a fresh 96-bit random IV for every payload (Section~\ref{sec:impl-encryption}).
+A 96-bit IV is the size recommended by NIST for GCM because it is used directly
+without additional processing.
+
+A symmetric scheme alone, however, only relocates the problem: whoever holds the
+AES key can read the data. The architectural question is therefore not ``how do
+we encrypt'' but ``who is allowed to hold the key, and under what condition''.
+The answer---threshold cryptography---requires the next two sections.
+
+\section{Elliptic-Curve Cryptography}
+\label{sec:bg-ecc}
+
+\emph{Public-key} (asymmetric) cryptography uses a key pair: a private key kept
+secret and a public key shared freely. \emph{Elliptic-curve cryptography}
+(ECC)~\cite{koblitz1987, miller1986} achieves the security of older schemes such
+as RSA at far smaller key sizes by working in the group of points on an elliptic
+curve over a finite field. Ethereum and Bitcoin both use the curve
+\texttt{secp256k1}~\cite{sec2}, and this work uses it as well for stealth
+addresses.
+
+Two operations matter for the present work. \emph{Scalar multiplication} takes a
+private scalar $k$ and the curve's fixed generator point $G$ and computes the
+public key $P = kG$; recovering $k$ from $P$ is the elliptic-curve
+discrete-logarithm problem and is believed infeasible. \emph{Elliptic-curve
+Diffie--Hellman} (ECDH) lets two parties who each hold a key pair derive a shared
+secret without transmitting it: given private $a$ and the other party's public
+$B = bG$, party $A$ computes $aB = abG$, and party $B$ symmetrically computes
+$bA = baG = abG$; the two results are equal. Stealth addresses
+(Section~\ref{sec:bg-stealth}) are built directly on these two operations: a
+one-time payment address is derived by offsetting a recipient's public key by a
+scalar that only the sender and recipient can compute via ECDH.
+
+\section{Threshold Cryptography and Multi-Party Computation}
+\label{sec:bg-threshold}
+
+The core of the project's trust model is \emph{threshold cryptography}, a branch
+of \emph{secure multi-party computation} (MPC) in which a cryptographic
+capability is distributed among $n$ parties such that any $t$ of them can
+exercise it together, but any fewer than $t$ learn nothing.
+
+The foundational building block is \emph{Shamir's Secret
+Sharing}~\cite{shamir1979}. To share a secret $s$ among $n$ parties with
+threshold $t$, one constructs a random polynomial of degree $t-1$ whose constant
+term is $s$, and gives each party the value of the polynomial at a distinct
+point. Any $t$ parties hold $t$ points, which uniquely determine the degree-$t-1$
+polynomial (by Lagrange interpolation) and therefore reveal $s$; any $t-1$
+parties hold $t-1$ points, through which infinitely many degree-$t-1$ polynomials
+pass, so every value of $s$ remains equally likely. The scheme is
+\emph{information-theoretically} secure below the threshold: fewer than $t$
+shares give \emph{zero} information, independent of the adversary's computing
+power.
+
+A \emph{threshold cryptosystem}~\cite{desmedt1989, nistThreshold} applies this
+idea so that the secret being shared is a \emph{private key} which is never
+reconstructed in one place. Through \emph{distributed key generation} (DKG), the
+$n$ parties jointly produce a public key while each holds only a share of the
+corresponding private key; no party ever sees the whole private key, not even at
+creation. To decrypt or sign, $t$ parties each compute a partial result using
+their share, and the partials are combined into the final result---again without
+ever assembling the key. A \emph{threshold signature scheme} (TSS) does this for
+signatures; threshold decryption does it for decryption.
+
+The security implications are exactly what a coercion-resistant system needs.
+The private capability has no single physical location to seize, subpoena, or
+attack. An adversary must simultaneously compromise at least $t$ of the $n$
+parties---ideally operated by different entities in different
+jurisdictions---to break confidentiality, and must take more than $n - t$ offline
+to prevent the operation, so the system is both confidential and fault-tolerant
+by construction. Critically, the strength of these guarantees comes from a
+mathematical assumption about how many independent parties an adversary can
+corrupt, not from a physical assumption about the impenetrability of a single
+device. This distinction is the crux of the argument in
+Section~\ref{sec:bg-tee} and Chapter~\ref{ch:evaluation}.
+
+Schemes based on the Boneh--Lynn--Shacham (BLS) signature~\cite{boneh2001bls}
+support \emph{non-interactive} threshold operations, in which each party can
+produce its partial result independently and the partials are aggregated without
+a multi-round protocol. This efficiency is what makes a network like Lit
+Protocol practical as application infrastructure rather than a laboratory
+construction.
+
+\section{Zero-Knowledge Proofs and zkTLS}
+\label{sec:bg-zk}
+
+A \emph{zero-knowledge proof} (ZKP)~\cite{goldwasser1989} allows a \emph{prover}
+to convince a \emph{verifier} that a statement is true while revealing nothing
+beyond the truth of the statement itself. A ZKP must be \emph{complete} (a true
+statement can always be proven), \emph{sound} (a false statement cannot be proven
+except with negligible probability), and \emph{zero-knowledge} (the verifier
+learns nothing other than validity). Modern non-interactive succinct proof
+systems make the proof small and quick to verify, which is what allows a proof to
+be checked inside a smart contract.
+
+This thesis applies zero-knowledge proofs to the credibility problem through
+\emph{zkTLS} (zero-knowledge transport-layer security). Ordinary TLS---the
+\texttt{https} that secures the web---encrypts traffic between a client and a
+server so that no eavesdropper can read it, but it produces no transferable
+evidence of \emph{what} was exchanged: a screenshot of a corporate portal proves
+nothing, because it can be trivially forged. zkTLS closes this gap. Building on
+research such as DECO~\cite{zhang2020deco}, zkTLS protocols let a client come away
+from a genuine TLS session with a cryptographic proof about the session's
+contents---``the server at this domain returned a record stating my employment
+status is active''---without revealing the rest of the session (their username,
+password, session token, or any other field they choose to redact).
+
+The \emph{Reclaim Protocol}~\cite{reclaim} implements this with a
+\emph{witness} (an HTTPS proxy) that observes the encrypted handshake and
+attests to its authenticity, while the client decrypts the response locally,
+redacts everything except the target claim, and produces a zero-knowledge proof
+binding the redacted claim to the authenticated session. The result separates the
+\emph{fact} being proven from the \emph{identity} of the person proving it---
+exactly the property a credible-but-anonymous source requires.
+Section~\ref{sec:design-identity} describes how \zkw anchors such proofs
+on-chain. A complementary technology, \emph{ZK-Email}~\cite{zkemail}, proves
+properties of emails by verifying their DKIM signatures in zero knowledge; it is
+discussed as future work in Chapter~\ref{ch:conclusions}.
+
+\section{Stealth Addresses (ERC-5564)}
+\label{sec:bg-stealth}
+
+A naive on-chain payment to a whistleblower is self-defeating: the recipient's
+address is public, so paying it links the payment---and everyone who can see the
+chain---to the source. \emph{Stealth addresses}~\cite{erc5564} solve this using
+the ECDH machinery of Section~\ref{sec:bg-ecc}.
+
+The recipient publishes a \emph{stealth meta-address} consisting of two public
+keys: a \emph{spending} key and a \emph{viewing} key. To pay them, a sender
+generates a fresh \emph{ephemeral} key pair, performs ECDH between the ephemeral
+private key and the recipient's viewing public key to obtain a shared secret,
+hashes that secret to a scalar, and offsets the recipient's spending public key
+by that scalar times $G$ to produce a brand-new, one-time \emph{stealth address}.
+The sender publishes only the ephemeral public key (an ``announcement''). The
+recipient, scanning announcements, performs the symmetric ECDH with their viewing
+private key, recomputes the same scalar, and recognises payments meant for them;
+because they hold the spending private key, they---and only they---can derive the
+private key controlling the stealth address and move the funds. A \emph{view tag}
+(a single byte of the shared secret) lets the recipient skip most announcements
+cheaply during scanning.
+
+To any external observer, a stealth payment is a transfer to a fresh,
+never-before-seen address with no visible connection to the recipient's published
+identity. This is exactly the unlinkability the marketplace
+(Section~\ref{sec:design-marketplace}) needs to reward sources safely.
+
+\section{Permanent Decentralised Storage}
+\label{sec:bg-storage}
+
+Encrypted evidence must survive even a determined effort to erase it, and it must
+remain available long after the source has gone silent. Conventional cloud
+storage fails both tests: it can be deleted by the provider, by a court order, or
+by the source under duress. \emph{Arweave}~\cite{arweave} addresses this with a
+\emph{pay-once, store-forever} model: a single up-front payment funds an
+endowment that incentivises a decentralised network of miners to replicate the
+data indefinitely. Once a payload is written to Arweave's ``permaweb'', it cannot
+be unilaterally deleted by anyone---including its author---which is precisely the
+property a dead man's switch requires, since the source must not be able to
+retract the evidence even when coerced.
+
+A related system, the \emph{InterPlanetary File System}
+(IPFS)~\cite{benet2014ipfs}, provides content-addressed storage where data is
+referenced by the hash of its contents; it is well-suited to mutable metadata but
+does not by itself guarantee permanence. The implementation
+(Section~\ref{sec:impl-storage}) stores the encrypted vault payload on Arweave,
+reached through a modern upload service that removes the historical friction of
+funding storage transactions.
+
+\section{Trusted Execution Environments and Their Limitations}
+\label{sec:bg-tee}
+
+The final piece of background is the technology this thesis deliberately moves
+\emph{away} from. A \emph{trusted execution environment} (TEE) is a hardware
+feature---Intel's \emph{Software Guard Extensions} (SGX) being the canonical
+example~\cite{costan2016sgx}---that creates an \emph{enclave}: a region of
+encrypted memory isolated from the operating system, the hypervisor, and even a
+malicious machine operator. Code running in an enclave can hold secrets, such as
+decryption keys, and prove to a remote party through \emph{attestation} that it
+is running unmodified inside genuine hardware. On its face this is attractive for
+key custody: the host runs the code but cannot see the keys.
+
+The earlier iteration of this project relied on exactly this, sealing decryption
+keys in an SGX enclave accessed through the iExec network. For the threat model of
+high-value whistleblowing, however, a TEE has three fundamental weaknesses.
+
+\textbf{Side-channel and transient-execution attacks.} The isolation guarantee of
+SGX has been repeatedly broken in practice. Attacks such as
+Foreshadow~\cite{vanbulck2018foreshadow} and SGAxe/CacheOut~\cite{vanschaik2020sgaxe}
+exploit speculative execution and cache timing to extract sealed secrets,
+including the attestation keys that underpin the whole trust chain. An adversary
+with physical or privileged access to the host---a plausible position for a
+nation-state acting against a cloud provider under legal compulsion---is exactly
+the adversary best placed to mount such attacks.
+
+\textbf{A centralised hardware root of trust.} SGX attestation ultimately
+requires trusting the hardware manufacturer to have generated and managed the
+attestation keys correctly and not to have been compelled to produce a backdoor.
+This reintroduces, in silicon, the very single point of trust that
+decentralisation is meant to remove: the security of the whole system collapses
+if one vendor's master keys are compromised or coerced.
+
+\textbf{Liveness and centralisation of operation.} TEE-based services tend to run
+on specific, specialised hardware operated by a small number of providers. If the
+particular nodes holding a source's key are taken offline or censored, the dead
+man's switch can simply fail to fire---an unacceptable failure mode for a
+mechanism whose entire value proposition is that it is unstoppable.
+
+The conclusion drawn in this thesis, and developed in Chapter~\ref{ch:evaluation},
+is that a TEE relocates trust from software to hardware but does not
+\emph{eliminate} a single point of failure---it merely changes its nature, from
+one that can be hacked to one that can be both hacked and legally compelled.
+Threshold cryptography, by contrast, replaces the single point of failure with a
+distributed-trust assumption that an adversary must defeat in many places at once.
+It is on this basis that the system replaces the SGX enclave with the Lit
+Protocol's threshold network. The remainder of the thesis develops that design.
+It is worth noting, and Chapter~\ref{ch:evaluation} returns to this, that parts
+of the wider Lit ecosystem have since reintroduced TEE-based execution; the design
+presented here consciously stays on the multi-party-computation path.

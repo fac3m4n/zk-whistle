@@ -1,0 +1,420 @@
+\chapter{System Design and Architecture}
+\label{ch:architecture}
+
+This chapter presents the design of \zkwns. It begins with the design goals and
+the threat model that constrain every subsequent decision, then gives a layered
+overview of the architecture and the rationale for its defining choice---moving
+key custody from hardware to mathematics. It then specifies each of the three
+functional modules, the data model (with particular attention to what is and is
+not placed on-chain), and the end-to-end workflows that tie the modules together.
+Implementation details are deferred to Chapter~\ref{ch:implementation}; this
+chapter is concerned with \emph{what} the system does and \emph{why}.
+
+\section{Design Goals and Principles}
+\label{sec:design-goals}
+
+The architecture is shaped by six principles, each traceable to the problem
+statement of Section~\ref{sec:intro-problem}.
+
+\begin{description}
+  \item[P1 --- No single point of trust.] No individual party---person,
+  organisation, server, or chip---may be in a position to unilaterally read the
+  evidence, withhold it, release it early, or deanonymise the source. Every
+  trust assumption is to be distributed across an independent network.
+
+  \item[P2 --- Client-side confidentiality.] Plaintext and key material exist
+  only on the source's device. Everything that leaves the browser is either
+  ciphertext, a commitment, or a public reference.
+
+  \item[P3 --- No plaintext on-chain.] The public ledger stores only the minimum
+  needed to coordinate the protocol: timestamps, references to off-chain data,
+  hashes, and payment state. It never stores sensitive content.
+
+  \item[P4 --- Autonomy and unstoppability.] The release of evidence must not
+  depend on any operator's continued cooperation. Once armed, the switch fires
+  based solely on objective, on-chain state.
+
+  \item[P5 --- Credible anonymity.] The source can substantiate a claim about
+  themselves (e.g.\ insider access) to the level a journalist needs, while
+  remaining anonymous; reward must not break that anonymity.
+
+  \item[P6 --- Graceful degradation and honesty.] Where a component cannot
+  provide its full guarantee in a given environment, the system must say so
+  clearly rather than fail silently or pretend.
+\end{description}
+
+\section{Threat Model}
+\label{sec:design-threat}
+
+\paragraph{Actors.} The protagonists are the \emph{source} (whistleblower), who
+holds evidence and wishes to seal it; the \emph{recipient} (a specific
+journalist) or the \emph{public}, to whom the evidence is released; and a
+\emph{buyer} (journalist) in the marketplace, who pays for access.
+
+\paragraph{Adversary.} The adversary is powerful: a well-resourced organisation,
+up to and including a nation-state, that may (i) surveil network traffic and the
+public blockchain; (ii) compel or compromise a centralised service provider, a
+cloud host, or a hardware vendor under legal or extralegal pressure; (iii) detain
+or coerce the source; and (iv) attempt to submit fabricated leaks or to
+deanonymise sources through metadata. The adversary is assumed \emph{not} able to
+break standard cryptographic primitives (AES-256, secp256k1, BLS, SHA-256) or to
+simultaneously corrupt a threshold fraction of an independent, globally
+distributed node network.
+
+\paragraph{Security goals.} Against this adversary the system aims to guarantee:
+confidentiality of the evidence until the release condition holds; integrity and
+authenticity of the released evidence; autonomy of the release (no operator can
+prevent it once armed); anonymity of the source throughout; unlinkability of
+rewards; and a credibility signal that resists Sybil and fabrication attacks.
+
+\paragraph{Explicitly out of scope.} The system does not defend against
+compromise of the source's own device while they hold plaintext (an endpoint
+problem), against the source voluntarily revealing their identity, against
+traffic-analysis deanonymisation at the network layer (for which the source
+should use Tor or a VPN), or against the legal consequences a source may face if
+independently identified. These are acknowledged in Chapter~\ref{ch:evaluation}.
+
+\section{Architectural Overview}
+\label{sec:design-overview}
+
+\zkw is structured as four cooperating layers, each operated by a different
+decentralised system so that no layer can compromise the guarantees of another.
+Figure~\ref{fig:arch-layers} shows the layers and the data that flows between
+them.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  layer/.style={draw=zkwframe, rounded corners, fill=zkwbg, minimum width=12.2cm, minimum height=1.55cm, align=center},
+  box/.style={draw=zkwaccent, rounded corners, fill=white, align=center, minimum height=0.95cm, font=\sffamily\scriptsize, inner sep=3pt},
+  lbl/.style={font=\sffamily\bfseries\footnotesize, text=zkwaccent},
+  >={Stealth[length=2mm]}
+]
+% Client layer
+\node[layer, minimum height=1.8cm] (client) {};
+\node[lbl, anchor=north west] at ([xshift=4pt,yshift=-3pt]client.north west) {Client Layer (in-browser, Next.js)};
+\node[box] (enc) at ([xshift=-3.9cm,yshift=-0.25cm]client.center) {AES-256-GCM\\encryption};
+\node[box] (rec) at ([xshift=0cm,yshift=-0.25cm]client.center) {Reclaim\\zkTLS widget};
+\node[box] (ste) at ([xshift=3.9cm,yshift=-0.25cm]client.center) {Stealth keys\\(secp256k1)};
+
+% Chain layer
+\node[layer, below=1.3cm of client, minimum height=1.8cm] (chain) {};
+\node[lbl, anchor=north west] at ([xshift=4pt,yshift=-3pt]chain.north west) {Logic / State Layer (EVM smart contracts)};
+\node[box] (dms) at ([xshift=-3.9cm,yshift=-0.25cm]chain.center) {DeadMansSwitch\\isDeceased()};
+\node[box] (reg) at ([xshift=0cm,yshift=-0.25cm]chain.center) {Whistleblower\\Registry};
+\node[box] (mkt) at ([xshift=3.9cm,yshift=-0.25cm]chain.center) {Marketplace\\(stealth payout)};
+
+% Keys layer
+\node[layer, below=1.3cm of chain] (keys) {};
+\node[lbl, anchor=north west] at ([xshift=4pt,yshift=-3pt]keys.north west) {Key-Management Layer};
+\node[box, minimum width=6cm] (lit) at ([yshift=-0.2cm]keys.center) {Lit Protocol MPC / threshold-BLS network\\(Access Control Conditions)};
+
+% Storage layer
+\node[layer, below=1.3cm of keys] (store) {};
+\node[lbl, anchor=north west] at ([xshift=4pt,yshift=-3pt]store.north west) {Storage Layer};
+\node[box, minimum width=6cm] (arw) at ([yshift=-0.2cm]store.center) {Arweave permaweb\\(encrypted payload, permanent)};
+
+% Arrows
+\draw[->, zkwaccent, thick] (enc.south) -- ++(0,-0.55) -| (arw.north) node[midway, above, pos=0.25, font=\sffamily\tiny\itshape, text=zkwcomment] {ciphertext};
+\draw[->, zkwaccent, thick] (enc.south) -- ++(0,-0.3) -| (lit.north) node[near start, above, font=\sffamily\tiny\itshape, text=zkwcomment] {AES key};
+\draw[->, dashed, zkwaccent] (lit.east) -- ++(1.0,0) |- (dms.east) node[near start, right, font=\sffamily\tiny\itshape, text=zkwcomment] {reads};
+\draw[->, zkwaccent, thick] (rec.south) -- (reg.north) node[midway, right, font=\sffamily\tiny\itshape, text=zkwcomment] {proof hash};
+\draw[->, zkwaccent, thick] (ste.south) -- (mkt.north) node[midway, right, font=\sffamily\tiny\itshape, text=zkwcomment] {meta-addr.};
+\end{tikzpicture}
+\caption{The four-layer architecture of \zkwns. Each layer is operated by an
+independent decentralised system; arrows show the principal data flows.}
+\label{fig:arch-layers}
+\end{figure}
+
+The \textbf{client layer} is a Next.js single-page application that runs entirely
+in the source's browser. It performs all encryption, drives the zkTLS proof
+widget, and manages stealth-address keys. By principle P2, it is the only place
+plaintext ever exists.
+
+The \textbf{logic/state layer} comprises three EVM smart contracts. They hold no
+sensitive data; they coordinate the protocol by recording liveness
+(\texttt{DeadMansSwitch}), reputation commitments
+(\texttt{WhistleblowerRegistry}), and marketplace state (\texttt{Marketplace}).
+
+The \textbf{key-management layer} is the Lit Protocol threshold network. It seals
+the AES key and releases it only when the dead man's switch's on-chain condition
+evaluates true. It is the architectural replacement for the V1 TEE.
+
+The \textbf{storage layer} is Arweave, which holds the encrypted payload
+permanently and censorship-resistantly.
+
+The separation matters because the layers have \emph{different and independent
+failure modes}. Compromising the chain does not reveal the key; compromising
+storage yields only ciphertext; compromising a minority of Lit nodes reveals
+nothing; and none of them ever sees plaintext. An adversary must defeat several
+independent systems at once---the concrete realisation of principle P1.
+
+\section{From Hardware to Mathematics}
+\label{sec:design-shift}
+
+The single most consequential design decision is the replacement of the V1
+trusted execution environment with the Lit Protocol's threshold network as the
+custodian of decryption keys. Section~\ref{sec:bg-tee} laid out the cryptographic
+argument; here it is framed as an architectural one.
+
+A TEE and a threshold network both answer the question ``who can hold the key
+without being able to abuse it?''---but they answer it with different kinds of
+assumption. The TEE answers with a \emph{physical} assumption: that a particular
+piece of silicon cannot be opened, that its manufacturer is honest and
+uncompelled, and that the specific nodes hosting the enclave stay online. The
+threshold network answers with a \emph{distributional} assumption: that an
+adversary cannot simultaneously corrupt a threshold fraction of many independent
+operators. The crucial difference is what happens when the assumption is stressed
+by a nation-state adversary. A physical assumption fails \emph{all at once and
+silently}: one successful side-channel attack, or one compelled vendor, breaks
+every key. A distributional assumption \emph{degrades gracefully and visibly}:
+corrupting one operator, or ten, achieves nothing until the threshold is reached,
+and doing so requires coordinated action across jurisdictions.
+
+In the architecture, this manifests concretely. The AES key is encrypted such
+that the Lit network will only assemble the decryption shares when an
+\emph{Access Control Condition} holds. The condition is not a trusted operator's
+say-so but a read of public, objective on-chain state:
+\texttt{DeadMansSwitch.isDeceased(source)} must return \texttt{true}. The release
+logic is thus split between an immutable smart contract (the condition) and a
+threshold network (the key), neither of which can act alone. This is the design's
+answer to principle P4.
+
+Chapter~\ref{ch:evaluation} revisits this choice in light of the fact that the
+Lit ecosystem has itself begun to offer a TEE-based runtime; the design here
+deliberately uses the multi-party-computation network generation precisely to
+keep the trust anchor in mathematics.
+
+\section{Module A: The Vault (Dead Man's Switch)}
+\label{sec:design-vault}
+
+Module A is the heart of the system. Its on-chain component, the
+\texttt{DeadMansSwitch} contract, is a minimal liveness registry. Each source has
+at most one active \emph{switch} recording: the timestamp of their last check-in,
+the required interval between check-ins, a reference to the encrypted payload on
+Arweave, a reference to the Lit access-control conditions, and an optional
+recipient address (the zero address denoting public release).
+
+The switch exposes the predicate that the whole system pivots on:
+
+\[
+\texttt{isDeceased}(u) \;=\;
+\begin{cases}
+\texttt{true}  & \text{if the switch is active and } t_{\text{now}} > t_{\text{last}} + \Delta,\\[2pt]
+\texttt{false} & \text{otherwise,}
+\end{cases}
+\]
+
+where $t_{\text{last}}$ is the last check-in, $\Delta$ the interval, and
+$t_{\text{now}}$ the current block timestamp. The source keeps the switch
+``alive'' by periodically calling \texttt{checkIn()}, which resets $t_{\text{last}}$
+to the current time. They may \texttt{deactivateSwitch()} to cancel while alive,
+or \texttt{updateSwitchMetadata()} to re-point the storage and key references.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  node distance=2.4cm and 3.0cm,
+  state/.style={draw=zkwaccent, thick, rounded corners, fill=zkwbg, minimum width=2.6cm, minimum height=1.1cm, align=center},
+  term/.style={draw=zkwcomment, thick, rounded corners, fill=white, minimum width=2.6cm, minimum height=1.1cm, align=center},
+  >={Stealth[length=2.2mm]}
+]
+\node[state] (none) {No switch};
+\node[state, right=of none] (active) {Active\\(alive)};
+\node[term, right=of active] (triggered) {Triggered\\(released)};
+\node[term, below=1.6cm of active] (inactive) {Deactivated};
+
+\draw[->, thick] (none) -- node[above, font=\sffamily\scriptsize] {createSwitch} (active);
+\draw[->, thick] (active) to[loop above] node[above, font=\sffamily\scriptsize] {checkIn (resets timer)} (active);
+\draw[->, thick] (active) -- node[above, font=\sffamily\scriptsize, align=center] {interval elapses\\(isDeceased = true)} (triggered);
+\draw[->, thick] (active) -- node[right, font=\sffamily\scriptsize] {deactivateSwitch} (inactive);
+\draw[->, thick, dashed] (inactive) -- node[below left, font=\sffamily\scriptsize, align=center] {createSwitch\\(re-arm)} (active);
+\end{tikzpicture}
+\caption{Lifecycle of a Dead Man's Switch. The transition to \emph{Triggered}
+happens automatically with the passage of time; it requires no transaction.}
+\label{fig:vault-lifecycle}
+\end{figure}
+
+Figure~\ref{fig:vault-lifecycle} shows the switch's lifecycle. The decisive
+property is that the transition from \emph{Active} to \emph{Triggered} is not an
+action anyone takes---it is simply the passage of time making the
+\texttt{isDeceased} predicate true. No transaction, no operator, and no
+cooperation are required for the switch to fire. This is what makes it
+unstoppable.
+
+When the switch triggers, the Lit network---whose access-control condition reads
+\texttt{isDeceased(source)}---will release the AES key to a requester, who fetches
+the ciphertext from Arweave and decrypts it. The off-chain key release and the
+on-chain trigger are bound together by the access-control condition, so that the
+key becomes available exactly when, and only when, the source goes silent.
+
+\section{Module B: Identity and Reputation}
+\label{sec:design-identity}
+
+Module B answers the credibility problem. Its on-chain component, the
+\texttt{WhistleblowerRegistry}, stores, per source, a list of proof
+identifiers/hashes, a verified flag, a registration timestamp, and a published
+stealth meta-address. By principle P3, the \emph{full} zkTLS proof never goes
+on-chain---only its hash (or, in the trustless path, the claim identifier
+verified on-chain)---while the proof JSON lives off-chain.
+
+The registry deliberately supports three verification modes of decreasing
+strength, so the system can be honest (principle P6) about what a ``verified''
+badge means in a given deployment:
+
+\begin{enumerate}
+  \item \textbf{On-chain verified (trustless).} The full Reclaim proof is passed
+  to a deployed Reclaim verifier contract, which checks the witness signatures
+  on-chain. Verification accrues to the proof's \emph{owner}, not the caller, so a
+  valid proof cannot be replayed to verify a different account. This is the
+  production path and gives the verified flag cryptographic meaning with no
+  trusted party.
+  \item \textbf{Owner attestation.} A designated verifier (the contract owner,
+  e.g.\ a backend or a Lit Action) attests verification after checking a proof
+  off-chain---used where no verifier contract is deployed for the chain or
+  provider.
+  \item \textbf{Trust-on-submit (development only).} The first submitted proof
+  hash marks the submitter verified. This is convenient for local demonstration
+  and is explicitly \emph{not} a credibility guarantee; it defaults off on live
+  networks.
+\end{enumerate}
+
+This layered design is itself a contribution: rather than pretending a single
+mechanism suits all deployments, the registry makes the trust assumption explicit
+and configurable, and the user interface selects the strongest available mode for
+the active network.
+
+\section{Module C: The Marketplace}
+\label{sec:design-marketplace}
+
+Module C lets sources be compensated. The \texttt{Marketplace} contract holds
+listings (a description hash, an Arweave reference to the encrypted payload, a
+minimum bid, and a verified flag \emph{read from the registry}, not self-asserted)
+and escrowed bids. A journalist places a bid by sending ether, which the contract
+holds; the source accepts a bid, at which point the contract deducts a fixed
+platform fee and forwards the remainder to a one-time \emph{stealth address}
+supplied by the source. Unaccepted bids can be withdrawn for a full refund.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\sffamily\scriptsize,
+  actor/.style={draw=zkwaccent, thick, rounded corners, fill=zkwbg, minimum width=2.3cm, minimum height=0.9cm, align=center},
+  op/.style={draw=zkwframe, rounded corners, fill=white, minimum width=2.6cm, minimum height=0.85cm, align=center},
+  >={Stealth[length=2mm]}
+]
+\node[actor] (recv) {Source\\(receiver)};
+\node[op, right=2.4cm of recv] (meta) {publish\\meta-address};
+\node[actor, right=2.4cm of meta] (send) {Buyer\\(sender)};
+
+\node[op, below=1.1cm of meta] (eph) {ECDH with\\ephemeral key};
+\node[op, below=1.1cm of eph] (stealth) {one-time\\stealth address};
+\node[op, left=2.6cm of stealth] (scan) {scan with\\viewing key};
+
+\draw[->, thick] (recv) -- (meta);
+\draw[->, thick] (meta) -- (send);
+\draw[->, thick] (send) -- (eph);
+\draw[->, thick] (eph) -- (stealth);
+\draw[->, thick] (stealth) -- node[below, font=\sffamily\tiny] {payout (minus fee)} (scan);
+\draw[->, thick] (scan) -- node[left, font=\sffamily\tiny] {recover funds} (recv);
+\draw[->, dashed, zkwcomment] (eph) -| node[near start, above, font=\sffamily\tiny] {announce ephemeral pubkey} (scan);
+\end{tikzpicture}
+\caption{Stealth-address payment flow (ERC-5564). The buyer derives a fresh
+one-time address from the source's published meta-address; only the source, using
+their viewing and spending keys, can locate and spend the funds.}
+\label{fig:stealth-flow}
+\end{figure}
+
+Figure~\ref{fig:stealth-flow} illustrates the payment. Because the payout goes to
+a freshly derived address with no on-chain link to the source's published
+identity, an observer sees only a transfer to an unfamiliar account. This
+satisfies principle P5's requirement that reward not break anonymity. Coupling the
+marketplace's verified flag to the registry (rather than to a self-asserted
+parameter) ensures a ``Verified Source'' badge always reflects genuine on-chain
+reputation.
+
+\section{Data Model: On-Chain versus Off-Chain}
+\label{sec:design-datamodel}
+
+The placement of data is a security decision, not merely an efficiency one.
+Table~\ref{tab:datamodel} enumerates where each kind of data lives and why,
+making the ``no plaintext on-chain'' principle (P3) concrete.
+
+\begin{table}[htbp]
+\centering
+\caption{What is stored where, and why.}
+\label{tab:datamodel}
+\small
+\begin{tabular}{@{}p{4.4cm}p{3.0cm}p{6.0cm}@{}}
+\toprule
+\textbf{Data} & \textbf{Location} & \textbf{Rationale} \\
+\midrule
+File plaintext            & Client only (RAM) & Never persisted anywhere (P2). \\
+File ciphertext           & Arweave           & Permanent, censorship-resistant; useless without the key. \\
+AES key (plaintext)       & Client only (RAM) & Exported, then immediately sealed by Lit. \\
+AES key (sealed)          & Arweave manifest  & Only the Lit network can unseal it, and only under the ACC. \\
+Heartbeat \& interval     & EVM (DeadMansSwitch) & Must be public/objective for the ACC to read trustlessly. \\
+Arweave / Lit references  & EVM               & Coordination pointers; reveal nothing sensitive. \\
+zkTLS proof (full JSON)   & Off-chain         & Large; only its hash/identifier needs to be anchored. \\
+Proof hash / identifier   & EVM (Registry)    & Anchors credibility; reveals nothing about identity. \\
+Stealth meta-address      & EVM (Registry)    & Public by design; unlinkable to derived payments. \\
+Bids \& payment state     & EVM (Marketplace) & Needed for escrow; payout goes to a stealth address. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{End-to-End Workflows}
+\label{sec:design-workflows}
+
+Two workflows tie the modules together: arming a vault and releasing it.
+
+\paragraph{Arming.} The source (i) selects a file, which is encrypted in the
+browser with a fresh AES-256-GCM key; (ii) the AES key is sealed by Lit under the
+\texttt{isDeceased(source)} access-control condition; (iii) a self-describing
+manifest---ciphertext, IV, sealed key, and metadata, but never plaintext---is
+uploaded to Arweave; and (iv) the source calls \texttt{createSwitch} with the
+chosen interval, the Arweave reference, the Lit reference, and the recipient.
+Thereafter they call \texttt{checkIn} within each interval.
+
+\paragraph{Releasing.} Figure~\ref{fig:release-seq} shows the release. When the
+interval lapses, \texttt{isDeceased(source)} becomes true. A requester (the named
+recipient, or anyone, for a public release) fetches the manifest from Arweave,
+authenticates to Lit with their wallet, and asks Lit to unseal the AES key. The
+Lit nodes independently evaluate the access-control condition against the chain;
+finding it true, they each contribute a decryption share, and the combined key is
+returned to the requester, who decrypts the payload locally.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  font=\sffamily\scriptsize,
+  party/.style={draw=zkwaccent, thick, fill=zkwbg, rounded corners, minimum width=2.1cm, minimum height=0.8cm, align=center},
+  >={Stealth[length=2mm]}
+]
+% lifelines
+\node[party] (req) at (0,0) {Requester};
+\node[party] (arw) at (3.7,0) {Arweave};
+\node[party] (lit) at (7.4,0) {Lit network};
+\node[party] (chain) at (11.0,0) {DeadMansSwitch};
+\foreach \n in {req,arw,lit,chain} {
+  \draw[zkwframe, thick] (\n.south) -- ++(0,-5.4);
+}
+% messages
+\draw[->, thick] ($(req.south)+(0,-0.5)$) -- node[above, font=\sffamily\tiny] {fetch manifest} ($(arw.south)+(0,-0.5)$);
+\draw[<-, thick] ($(req.south)+(0,-1.1)$) -- node[above, font=\sffamily\tiny] {ciphertext + sealed key} ($(arw.south)+(0,-1.1)$);
+\draw[->, thick] ($(req.south)+(0,-1.9)$) -- node[above, font=\sffamily\tiny] {decrypt request (SIWE auth)} ($(lit.south)+(0,-1.9)$);
+\draw[->, thick] ($(lit.south)+(0,-2.5)$) -- node[above, font=\sffamily\tiny] {read isDeceased(source)} ($(chain.south)+(0,-2.5)$);
+\draw[<-, thick] ($(lit.south)+(0,-3.1)$) -- node[above, font=\sffamily\tiny] {true} ($(chain.south)+(0,-3.1)$);
+\node[align=center, font=\sffamily\tiny, text=zkwcomment] at ($(lit.south)+(0,-3.7)$) {threshold nodes\\combine shares};
+\draw[<-, thick] ($(req.south)+(0,-4.4)$) -- node[above, font=\sffamily\tiny] {unsealed AES key} ($(lit.south)+(0,-4.4)$);
+\node[align=center, font=\sffamily\tiny, text=zkwcomment] at ($(req.south)+(0,-5.0)$) {AES-GCM decrypt\\locally};
+\end{tikzpicture}
+\caption{Release sequence. The Lit network releases the key only after
+independently confirming the on-chain trigger condition; decryption itself happens
+on the requester's device.}
+\label{fig:release-seq}
+\end{figure}
+
+This completes the design. The next chapter describes how each element is built.

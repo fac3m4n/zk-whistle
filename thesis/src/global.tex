@@ -1,16 +1,40 @@
-% Thesis info
-\title{Magnificient Title}
-\author{John/Jane Doe}
-\date{Year of Grace}
+% =====================================================================
+% Thesis metadata
+% ---------------------------------------------------------------------
+% NOTE: replace the personal details below (author, adviser, year) with
+% your own before submission. They appear on the English and Romanian
+% title pages.
+% =====================================================================
 
-\titleen{Magnificent Title}
-\titlero{Un titlu de senzație}
-\adviser{Prof. Magnificus Academicus}
-\titlefooteren{Bucharest, Year of Grace}
-\titlefooterro{București, Anul de Grație}
+\title{Advanced Decentralized Architecture for Confidential Whistleblowing}
+\author{Author Name}            % <-- replace with your full name
+\date{2026}
 
+% English / Romanian titles used on the two title pages
+\titleen{Advanced Decentralized Architecture for Confidential Whistleblowing: From Trusted Execution Environments to Multi-Party Computation and Zero-Knowledge Provenance}
+\titlero{Arhitectură descentralizată avansată pentru avertizare de integritate confidențială: de la medii de execuție de încredere la calcul multi-parte și proveniență zero-knowledge}
+
+\adviser{Prof. Dr. Ing. Adviser Name}   % <-- replace with your adviser
+
+\titlefooteren{Bucharest, 2026}
+\titlefooterro{București, 2026}
+
+% =====================================================================
 % Macros
-% example: \newcommand{\EU}{European Union}
-% use '\EU\ ' if you want to enforce a space after the macro
+% =====================================================================
 
-\newcommand{\project}{MySuperProject}
+% Project name shorthand.
+\newcommand{\zkw}{ZK-Whistle\ }
+\newcommand{\zkwns}{ZK-Whistle}
+
+% Inline code style for short identifiers (functions, types, files).
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Convenience for the dead man's switch condition.
+\newcommand{\isdeceased}{\code{isDeceased()}}
+
+% Long monospace identifiers (e.g. WhistleblowerRegistry) cannot hyphenate and
+% occasionally protrude into the right margin in justified text. A little
+% emergency stretch lets TeX break the line before such a word instead, keeping
+% the body free of overfull lines without visibly loosening spacing.
+\setlength{\emergencystretch}{3em}

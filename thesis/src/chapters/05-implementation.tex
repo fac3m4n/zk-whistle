@@ -1,0 +1,642 @@
+\chapter{Implementation}
+\label{ch:implementation}
+
+This chapter describes how the architecture of Chapter~\ref{ch:architecture} is
+realised in code. It moves from the development stack and repository layout, down
+through the on-chain contracts, and back up through the client-side cryptography,
+threshold key custody, permanent storage, anonymous payments, and zero-knowledge
+provenance, finishing with the way these pieces are orchestrated in the browser
+and wired together at deployment time. Throughout, the emphasis is on the design
+decisions that give \zkw its security properties --- where a secret lives, who can
+read it, and what an adversary observes --- rather than on incidental UI glue.
+
+The complete source is organised as a monorepo; the listings in this chapter are
+faithful extracts, occasionally abridged with comments to keep the discussion
+focused. File paths are given relative to the repository root so that each listing
+can be located in the accompanying code.
+
+\section{Implementation Overview}
+\label{sec:impl-overview}
+
+\zkw is built on Scaffold-ETH~2 (SE-2), a TypeScript starter kit that pairs a
+Hardhat smart-contract workspace with a Next.js front end and a set of typed
+React hooks for contract interaction. The choice is deliberate: SE-2 provides a
+reproducible local chain, automatic generation of contract ABIs and typed
+bindings, and a component library for common Web3 primitives, which lets the
+project concentrate engineering effort on the parts that are genuinely novel --- the
+cryptographic pipeline and the trust model --- rather than on boilerplate.
+
+\begin{table}[h]
+\centering
+\caption{Implementation stack by layer.}
+\label{tab:impl-stack}
+\begin{tabular}{p{3.6cm} p{4.0cm} p{6.0cm}}
+\toprule
+\textbf{Layer} & \textbf{Technology} & \textbf{Role in \zkwns} \\
+\midrule
+Contracts      & Solidity 0.8.x, Hardhat, OpenZeppelin & Dead man's switch, registry, marketplace, on-chain verification \\
+Client crypto  & Web Crypto API (browser) & AES-256-GCM encryption of payloads, all in-browser \\
+Key custody    & Lit Protocol SDK v8 (Naga) & Threshold sealing/unsealing of the AES key under on-chain conditions \\
+Provenance     & Reclaim Protocol (zkTLS) & Anonymous proof of source credentials \\
+Payments       & \code{@noble/secp256k1} & ERC-5564 stealth-address derivation and scanning \\
+Storage        & Arweave via Turbo SDK & Permanent, censorship-resistant payload storage \\
+Front end      & Next.js (App Router), wagmi, viem, DaisyUI & Wallet connection, vault wizard, release flow \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The repository is split into two packages under \code{packages/}: \code{hardhat}
+holds the Solidity sources, deployment scripts, and tests; \code{nextjs} holds the
+front end, including a \code{services/zk-whistle} directory that contains the
+security-critical, framework-agnostic logic (encryption, Lit custody, stealth
+addresses, storage, and Reclaim). Keeping this logic in plain TypeScript modules,
+separate from React components, makes it independently testable and auditable, and
+keeps the cryptographic core free of UI concerns.
+
+A guiding implementation rule, enforced by construction rather than convention, is
+that \emph{no plaintext and no key material ever leaves the browser in the clear}.
+Every network egress point --- the storage route, the chain, the Lit network --- only
+ever sees ciphertext or values derived from it. The sections that follow show how
+each component upholds that rule.
+
+\section{The Smart-Contract Layer}
+\label{sec:impl-contracts}
+
+Three contracts make up the on-chain logic. \code{DeadMansSwitch} is the trigger
+oracle; \code{WhistleblowerRegistry} anchors anonymous reputation; and
+\code{Marketplace} settles payments to stealth addresses. A small interface,
+\code{IReclaim}, lets the registry delegate cryptographic proof checking to a
+deployed Reclaim verifier. All three contracts deliberately store \emph{no}
+sensitive data: they hold timestamps, hashes, references, and payment state, never
+plaintext or keys.
+
+\subsection{The Dead Man's Switch}
+\label{sec:impl-dms}
+
+The dead man's switch is intentionally small. Its public surface is a single
+mapping from an owner address to a \code{Switch} struct, a handful of
+state-changing functions (\code{createSwitch}, \code{checkIn},
+\code{deactivateSwitch}, \code{updateSwitchMetadata}), and the read function that
+the entire release mechanism hinges on: \isdeceased. Listing~\ref{lst:dms-core}
+shows the heart of the contract.
+
+\begin{lstlisting}[language=Solidity,caption={The switch struct and the trigger predicate (\code{DeadMansSwitch.sol}).},label={lst:dms-core}]
+struct Switch {
+    uint256 lastHeartbeat;
+    uint256 heartbeatInterval; // seconds between required check-ins
+    string  arweaveTxId;       // Arweave tx id of encrypted payload
+    string  litAccessControlId;// Lit access-control reference
+    address recipient;         // address(0) = public release
+    bool    isActive;
+}
+
+mapping(address => Switch) public switches;
+
+function createSwitch(
+    uint256 _heartbeatInterval,
+    string calldata _arweaveTxId,
+    string calldata _litAccessControlId,
+    address _recipient
+) external {
+    require(!switches[msg.sender].isActive, "Switch already active");
+    require(_heartbeatInterval > 0, "Interval must be > 0");
+    require(bytes(_arweaveTxId).length > 0, "Arweave TX ID required");
+
+    switches[msg.sender] = Switch({
+        lastHeartbeat: block.timestamp,
+        heartbeatInterval: _heartbeatInterval,
+        arweaveTxId: _arweaveTxId,
+        litAccessControlId: _litAccessControlId,
+        recipient: _recipient,
+        isActive: true
+    });
+    // ... enumeration bookkeeping and events ...
+}
+
+function checkIn() external onlyActiveSwitchOwner {
+    switches[msg.sender].lastHeartbeat = block.timestamp;
+    emit HeartbeatUpdated(msg.sender, block.timestamp);
+}
+
+function isDeceased(address _user) external view returns (bool) {
+    Switch storage s = switches[_user];
+    if (!s.isActive) return false;
+    return block.timestamp > s.lastHeartbeat + s.heartbeatInterval;
+}
+\end{lstlisting}
+
+Three properties of this design matter for the rest of the system. First,
+\isdeceased is a pure function of public on-chain state --- a timestamp comparison ---
+so any party, including the Lit network's nodes, can evaluate it independently and
+arrive at the same answer; the trigger cannot be faked or suppressed by a single
+actor. Second, deactivation makes a switch return \code{false} even after the
+interval elapses, so a source who is safe can permanently disarm their vault.
+Third, the contract stores only an \code{arweaveTxId} and a
+\code{litAccessControlId}: pointers to where the ciphertext and the sealed key
+live, never the secrets themselves. This is what makes the on-chain footprint of a
+vault information-free with respect to its contents.
+
+The companion view \code{timeUntilTrigger} returns the seconds remaining before a
+switch fires, which the front end uses to render a countdown and to nudge the
+source to check in. It returns zero for inactive or already-triggered switches, so
+the UI never has to special-case those states.
+
+\subsection{The Whistleblower Registry and Tiered Verification}
+\label{sec:impl-registry}
+
+The registry stores a profile per address: a list of proof hashes, a verified
+flag, a registration timestamp, and an ERC-5564 stealth meta-address. The subtlety
+is in what ``verified'' is allowed to mean. A na\"ive implementation that lets a
+user self-assert verification would make the badge worthless. \zkw therefore
+offers three verification tiers, ordered from strongest to weakest, and the
+deployment chooses which are active.
+
+The strongest tier is fully trustless on-chain verification. The caller submits a
+complete Reclaim proof; the registry forwards it to a deployed Reclaim verifier,
+which checks the witness signatures on-chain. Crucially, verification accrues to
+the proof's \emph{owner} --- the address the proof was issued to --- not to the caller,
+which prevents a valid proof from being replayed to verify a different account and
+allows the call to be relayed by a gasless sponsor on the owner's behalf
+(Listing~\ref{lst:registry-verify}).
+
+\begin{lstlisting}[language=Solidity,caption={Trustless on-chain proof verification (\code{WhistleblowerRegistry.sol}).},label={lst:registry-verify}]
+function submitVerifiedProof(ReclaimTypes.Proof calldata proof) external {
+    require(address(reclaimVerifier) != address(0), "Verifier not configured");
+
+    bytes32 identifier = proof.signedClaim.claim.identifier;
+    address subject    = proof.signedClaim.claim.owner;
+    require(identifier != bytes32(0), "Invalid proof identifier");
+    require(subject != address(0),    "Invalid proof owner");
+    require(!proofHashExists[identifier], "Proof already submitted");
+
+    // Reverts if witness signatures are invalid or below threshold.
+    reclaimVerifier.verifyProof(proof);
+
+    _ensureRegistered(subject);
+    profiles[subject].proofHashes.push(identifier);
+    proofHashExists[identifier] = true;
+
+    if (!profiles[subject].isVerified) {
+        profiles[subject].isVerified = true;
+        emit VerificationUpdated(subject, true);
+    }
+    emit ProofVerifiedOnChain(subject, identifier);
+}
+\end{lstlisting}
+
+The middle tier, \code{attestVerification}, lets an authorised verifier (the
+contract owner, standing in for an off-chain validator or a Lit Action) set a
+user's status after checking a proof off-chain. It exists for chains or providers
+where a Reclaim verifier is not deployed. The weakest tier,
+\code{autoVerifyOnSubmit}, trust-marks a user on their first proof hash; it is a
+development convenience only and is enabled exclusively on the local chain (see
+Section~\ref{sec:impl-deploy}). Encoding the trust assumption directly in the
+contract, and making the production path cryptographic, keeps the meaning of the
+``Verified Source'' badge honest.
+
+\subsection{The Marketplace and Anonymous Settlement}
+\label{sec:impl-marketplace}
+
+The marketplace lets sources monetise information without ever revealing who
+receives the money. Listings carry a description hash, an Arweave reference, a
+minimum bid, and --- importantly --- a verified flag that is \emph{read from the
+registry at creation time} rather than supplied by the caller
+(Listing~\ref{lst:market-listing}). Tying the badge to on-chain reputation, not to
+a self-asserted parameter, is what stops a malicious source from minting fake
+credibility.
+
+\begin{lstlisting}[language=Solidity,caption={Verified flag sourced from the registry (\code{Marketplace.sol}).},label={lst:market-listing}]
+listings[listingId] = Listing({
+    whistleblower: msg.sender,
+    descriptionHash: _descriptionHash,
+    arweaveTxId: _arweaveTxId,
+    minimumBid: _minimumBid,
+    isActive: true,
+    isVerified: registry.isVerified(msg.sender), // not self-asserted
+    createdAt: block.timestamp,
+    bidCount: 0
+});
+\end{lstlisting}
+
+Settlement is where the anonymity guarantee is enforced. When a source accepts a
+bid, they supply a freshly derived one-time stealth address; the contract deducts
+a fixed platform fee and forwards the remainder there
+(Listing~\ref{lst:market-accept}). Because the payout lands at an address with no
+on-chain link to the source's published identity, an observer sees only a transfer
+to an unfamiliar account.
+
+\begin{lstlisting}[language=Solidity,caption={Paying out to a one-time stealth address under checks--effects--interactions (\code{Marketplace.sol}).},label={lst:market-accept}]
+function acceptBid(uint256 _listingId, uint256 _bidIndex, address payable _stealthAddress)
+    external nonReentrant
+{
+    Listing storage listing = listings[_listingId];
+    require(listing.whistleblower == msg.sender, "Not listing owner");
+    require(listing.isActive, "Listing not active");
+
+    Bid storage bid = bids[_listingId][_bidIndex];
+    require(!bid.isAccepted, "Bid already accepted");
+    require(!bid.isWithdrawn, "Bid was withdrawn");
+    require(_stealthAddress != address(0), "Invalid stealth address");
+
+    // Effects before interactions.
+    bid.isAccepted = true;
+    listing.isActive = false;
+
+    uint256 fee    = (bid.amount * PLATFORM_FEE_BPS) / 10000;
+    uint256 payout = bid.amount - fee;
+
+    (bool feeOk, )    = feeRecipient.call{ value: fee }("");
+    require(feeOk, "Fee transfer failed");
+    (bool payoutOk, ) = _stealthAddress.call{ value: payout }("");
+    require(payoutOk, "Payout transfer failed");
+
+    emit BidAccepted(_listingId, _bidIndex, _stealthAddress, payout);
+}
+\end{lstlisting}
+
+The fund-moving functions --- \code{placeBid}, \code{acceptBid}, and
+\code{withdrawBid} --- all follow the checks--effects--interactions pattern and are
+additionally guarded with OpenZeppelin's \code{ReentrancyGuard} as
+defence-in-depth. State is mutated to its final value \emph{before} any external
+call, so a malicious recipient contract that re-enters during the value transfer
+finds nothing left to exploit. This combination --- correct ordering plus a reentrancy
+lock --- is the standard mitigation for the class of bug behind some of the largest
+losses in the history of Ethereum, and it is applied uniformly here.
+
+\section{Client-Side Cryptography}
+\label{sec:impl-encryption}
+
+All confidentiality in \zkw rests on a single primitive applied correctly:
+AES-256-GCM, executed in the browser through the Web Crypto API. The
+\code{encryption} service is the only place plaintext is ever handled, and it is
+written so that plaintext never crosses a network boundary.
+
+A fresh 256-bit key is generated per vault and marked \emph{extractable}, because
+the key must later be exported so that Lit can seal it; it is decidedly not
+persisted anywhere in the clear. Encryption draws a fresh 96-bit initialisation
+vector --- the size recommended for GCM --- for every payload, guaranteeing that the
+nonce is never reused under a given key (Listing~\ref{lst:encrypt}).
+
+\begin{lstlisting}[language=TypeScript,caption={Per-payload key and IV, authenticated encryption (\code{encryption.ts}).},label={lst:encrypt}]
+const ALGORITHM = "AES-GCM";
+const KEY_LENGTH = 256;
+const IV_LENGTH = 12; // 96-bit IV recommended for AES-GCM
+
+export async function encryptData(data: Uint8Array, existingKey?: CryptoKey)
+  : Promise<EncryptedPayload> {
+  const key = existingKey ?? (await generateSymmetricKey());
+  const iv  = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+
+  const ciphertext = await crypto.subtle.encrypt({ name: ALGORITHM, iv }, key, data);
+  const exportedKey = await exportKey(key); // raw bytes, to be sealed by Lit
+
+  return { ciphertext: new Uint8Array(ciphertext), iv, exportedKey };
+}
+\end{lstlisting}
+
+Because GCM is an authenticated mode, decryption fails loudly if the ciphertext or
+IV has been tampered with; the system therefore gets integrity for free alongside
+confidentiality, and a corrupted Arweave fetch cannot silently yield wrong
+plaintext. The service also provides a compact binary serialisation,
+\code{[4-byte IV length][IV][ciphertext]}, used when assembling the stored
+manifest. Notably, the serialised form deliberately \emph{excludes} the key: the
+exported key bytes travel only to Lit for sealing, never into storage.
+
+This is the concrete realisation of principle P2 from
+Chapter~\ref{ch:architecture}: the plaintext lives only in volatile browser memory
+for the duration of encryption, and the key lives there only long enough to be
+sealed. Everything that subsequently leaves the device is ciphertext.
+
+\section{Threshold Key Custody with Lit Protocol}
+\label{sec:impl-lit}
+
+The most consequential implementation decision in \zkw is how the AES key is held
+between arming and release. Chapter~\ref{ch:architecture} argued for replacing
+hardware-rooted trust (a TEE) with mathematically-rooted trust (a threshold MPC
+network). Lit Protocol provides exactly this: a decentralised network whose nodes
+collectively hold key shares and will only reconstruct a secret when a stated
+access-control condition evaluates true.
+
+The condition \zkw uses is the dead man's switch itself: the helper that builds
+it, \code{buildDeadMansSwitchACC}, produces an EVM-contract condition that reads
+\isdeceased for the source's address and requires it to be \code{true}
+(Listing~\ref{lst:lit-acc}).
+
+\begin{lstlisting}[language=TypeScript,caption={Binding key release to the on-chain trigger (\code{litProtocol.ts}).},label={lst:lit-acc}]
+export function buildDeadMansSwitchACC(contractAddress, userAddress, chain) {
+  return [{
+    conditionType: "evmContract",
+    contractAddress,
+    chain,
+    functionName: "isDeceased",
+    functionParams: [userAddress],
+    functionAbi: {
+      name: "isDeceased", type: "function", stateMutability: "view",
+      inputs:  [{ name: "_user", type: "address", internalType: "address" }],
+      outputs: [{ name: "",      type: "bool",    internalType: "bool" }],
+    },
+    returnValueTest: { key: "", comparator: "=", value: "true" },
+  }];
+}
+\end{lstlisting}
+
+Sealing the key is a client-side BLS encryption: anyone can encrypt a value to a
+set of conditions without authenticating, because the conditions gate only
+\emph{decryption}. Unsealing, by contrast, requires a wallet-authenticated session
+(Sign-In With Ethereum) that the nodes verify, after which each node independently
+checks the access-control condition against the chain and contributes a decryption
+share only if it holds true. The combined shares reconstruct the key on the
+requester's device; no single node, and no central server, ever sees the whole key.
+This is the property a TEE cannot offer: trust is distributed across an
+$n$-of-$m$ threshold rather than concentrated in one chip and its manufacturer.
+
+Two implementation realities are worth recording, because they shaped the system.
+First, Lit evaluates EVM conditions only against a fixed allow-list of public
+chains; the local Hardhat chain (id \code{31337}) is not on it. The service
+therefore exposes \code{isLitSupportedChain} and \code{litChainNameFromId}, and the
+front end degrades gracefully to a ``local-preview'' mode on unsupported networks
+so the rest of the flow remains demonstrable. Second, the project targets the Lit
+SDK v8 stack (\code{@lit-protocol/lit-client} on the Naga network): the earlier v7
+SDK and the Datil network it spoke to were sunset on 25~February~2026 and are no
+longer reachable. Pinning to the MPC (Naga) path, rather than to newer
+TEE-backed Lit runtimes, keeps the system aligned with the threshold-cryptography
+trust model that motivates the whole design --- a point Chapter~\ref{ch:evaluation}
+returns to.
+
+\section{Permanent, Censorship-Resistant Storage}
+\label{sec:impl-storage}
+
+Encrypted vault manifests are stored on Arweave, whose one-time-fee,
+pay-once-store-forever model is a better fit for a ``release on my death''
+guarantee than a subscription-based pinning service that lapses if no one keeps
+paying. Uploads go through a hardened Next.js server route rather than directly
+from the browser, which lets the project use Turbo's free tier for sub-100~KiB
+payloads --- no wallet, no funding transaction, no testnet gas --- while keeping the
+upload path under the application's control.
+
+The client side is deliberately thin: it POSTs raw bytes and a little metadata,
+and reads payloads back by transaction id from a public gateway
+(Listing~\ref{lst:irys-client}).
+
+\begin{lstlisting}[language=TypeScript,caption={Thin storage client (\code{irysUpload.ts}).},label={lst:irys-client}]
+export async function uploadToArweave(data: Uint8Array, metadata): Promise<string> {
+  const response = await fetch("/api/storage", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "x-zkw-file-name": encodeURIComponent(metadata.fileName),
+      "x-zkw-mime-type": metadata.mimeType,
+      "x-zkw-version":   metadata.version,
+    },
+    body: data,
+  });
+  if (!response.ok) throw new Error(/* generic message */);
+  const { id } = await response.json();
+  return id;
+}
+\end{lstlisting}
+
+The server route is where the security controls live (Listing~\ref{lst:irys-route}).
+It runs only in the Node runtime --- so the Node-oriented Turbo SDK never executes
+client-side --- caps the body at 100~KiB to enforce the free tier and act as an abuse
+ceiling, applies best-effort per-IP rate limiting, attaches Arweave tags for
+discoverability, returns generic error messages, and sets
+\code{Cache-Control: no-store} on every response so that ciphertext is never
+cached by intermediaries. Because the body is already AES-256-GCM ciphertext
+wrapped in a self-describing manifest, the route handles no plaintext and no key
+material; even a fully compromised storage server learns nothing.
+
+\begin{lstlisting}[language=TypeScript,caption={Hardened upload route (abridged) (\code{api/storage/route.ts}).},label={lst:irys-route}]
+export const runtime = "nodejs";
+const MAX_BYTES = 100 * 1024;
+
+export async function POST(request: Request) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (rateLimited(ip)) return Response.json({ error: "Too many requests." },
+                                            { status: 429, headers: noStore });
+
+  const body = new Uint8Array(await request.arrayBuffer());
+  if (body.byteLength === 0)          return Response.json({ error: "Empty payload." },        { status: 400, headers: noStore });
+  if (body.byteLength > MAX_BYTES)    return Response.json({ error: "Payload too large." },    { status: 413, headers: noStore });
+
+  const { TurboFactory } = await import("@ardrive/turbo-sdk");
+  const turbo = TurboFactory.unauthenticated({ token: "base-usdc" });
+  const { id } = await turbo.uploadRawX402Data({ data: Buffer.from(body), tags });
+  return Response.json({ id }, { headers: noStore });
+}
+\end{lstlisting}
+
+\section{Anonymous Payments: ERC-5564 Stealth Addresses}
+\label{sec:impl-stealth}
+
+To reward sources without doxxing them, \zkw implements ERC-5564 stealth addresses
+over the secp256k1 curve using the audited \code{@noble/secp256k1} library. A
+source publishes a \emph{stealth meta-address} --- a spending public key and a viewing
+public key. A payer derives a fresh, one-time address from it for each payment;
+only the source, using their private keys, can recognise and later spend the funds.
+
+Derivation by the payer follows the standard construction: generate an ephemeral
+key pair, compute a Diffie--Hellman shared secret against the source's viewing key,
+hash it to a scalar, and add that scalar times the generator to the source's
+spending public key (Listing~\ref{lst:stealth-derive}). The resulting point yields
+the one-time Ethereum address; the first byte of the hashed secret is published as
+a ``view tag'' so the source can skip non-matching announcements cheaply during
+scanning.
+
+\begin{lstlisting}[language=TypeScript,caption={Payer-side stealth-address derivation (\code{stealthAddress.ts}).},label={lst:stealth-derive}]
+export function deriveStealthAddress(metaAddress): StealthPaymentInfo {
+  const ephemeralPrivateKey = secp.utils.randomSecretKey();
+  const ephemeralPublicKey  = secp.getPublicKey(ephemeralPrivateKey, true);
+
+  // Shared secret: ephemeral_priv * viewing_pub
+  const viewingPub   = hexToBytes(metaAddress.viewingPublicKey);
+  const sharedSecret = secp.getSharedSecret(ephemeralPrivateKey, viewingPub, true);
+  const hashedSecret = sha256(sharedSecret);
+
+  // stealth_pub = spending_pub + hash(shared_secret) * G
+  const spendingPub  = secp.Point.fromHex(metaAddress.spendingPublicKey);
+  const offset       = secp.Point.BASE.multiply(bytesToBigInt(hashedSecret));
+  const stealthPub   = spendingPub.add(offset).toBytes(false);
+
+  return {
+    stealthAddress: publicKeyToAddress(stealthPub),
+    ephemeralPublicKey: bytesToHex(ephemeralPublicKey),
+    viewTag: hashedSecret[0],
+  };
+}
+\end{lstlisting}
+
+Scanning mirrors this on the source's side: for each announced ephemeral key the
+source computes the same shared secret with their viewing \emph{private} key, checks
+the view tag, and confirms that the re-derived address matches the announced one.
+The viewing key thus enables detection without exposing the spending key, which
+remains the sole authority that can move the funds. The cryptographic symmetry
+between the two paths --- payer multiplies by the viewing public key, source
+multiplies by the viewing private key, and both arrive at the same secret --- is what
+makes the link between payer and payee invisible on-chain while keeping the funds
+fully spendable.
+
+\section{Zero-Knowledge Provenance with Reclaim}
+\label{sec:impl-reclaim}
+
+Credibility and anonymity normally pull in opposite directions. \zkw reconciles
+them with Reclaim Protocol, a zkTLS scheme that lets a source prove a fact derived
+from an authenticated HTTPS session --- that they hold a particular corporate email
+account, say --- without revealing the underlying credentials or their identity. The
+proof's hash, or for the trustless path its on-chain-verified identifier, is
+anchored in the registry; the bulky proof JSON stays off-chain.
+
+The implementation's security hinge is that the Reclaim \emph{app secret} must
+never reach the browser. \zkw enforces this with a server route that is the sole
+holder of the secret: it performs \code{ReclaimProofRequest.init} server-side and
+returns only a serialised, secret-free request configuration, which the client
+rebuilds with \code{fromJsonString} (Listing~\ref{lst:reclaim-route}). The route
+additionally validates the requested provider against a server-side allow-list,
+rate-limits per IP, never logs or echoes secret material, and sets
+\code{no-store}.
+
+\begin{lstlisting}[language=TypeScript,caption={Server-held Reclaim secret (abridged) (\code{api/reclaim/route.ts}).},label={lst:reclaim-route}]
+const ALLOWED_PROVIDER_IDS = new Set(Object.values(RECLAIM_PROVIDERS));
+
+export async function POST(request: Request) {
+  const appId     = process.env.RECLAIM_APP_ID;
+  const appSecret = process.env.RECLAIM_APP_SECRET; // never sent to the client
+  if (!appId || !appSecret)
+    return Response.json({ error: "Verification is not configured." }, { status: 503, headers: noStore });
+
+  const { providerId } = await request.json();
+  if (typeof providerId !== "string" || !ALLOWED_PROVIDER_IDS.has(providerId))
+    return Response.json({ error: "Unknown verification provider." }, { status: 400, headers: noStore });
+
+  const reclaimProofRequest = await ReclaimProofRequest.init(appId, appSecret, providerId);
+  return Response.json({ reclaimRequest: reclaimProofRequest.toJsonString() }, { headers: noStore });
+}
+\end{lstlisting}
+
+On the client, the service starts the session, surfaces a request URL for the user
+to complete the proof, and exposes a deterministic \code{hashProof} that produces a
+canonical \code{keccak256} digest suitable for on-chain submission. For deployments
+with a deployed verifier, the full proof can instead be transformed for on-chain
+use and passed to \code{submitVerifiedProof} (Section~\ref{sec:impl-registry}),
+giving the verification cryptographic, rather than merely attested, force.
+
+\section{Front-End Orchestration}
+\label{sec:impl-frontend}
+
+The components and hooks of the \code{nextjs} package compose the services above
+into two end-to-end flows: arming a vault and releasing it. The vault-creation
+wizard is the clearest illustration of how the security properties chain together,
+because it performs the pipeline in a fixed, auditable order: encrypt locally, then
+seal the key with Lit, then upload only ciphertext, then register on-chain
+(Listing~\ref{lst:vault-pipeline}).
+
+\begin{lstlisting}[language=TypeScript,caption={The arming pipeline, in order (\code{VaultCreationForm.tsx}).},label={lst:vault-pipeline}]
+// (1) Seal the AES key with Lit under the on-chain isDeceased() condition.
+const acc    = buildDeadMansSwitchACC(deadMansSwitch.address, address, litChain);
+const litKey = await encryptKey(encryptedPayload.exportedKey, acc, litChain);
+
+// (2) Assemble a self-describing manifest -- never any plaintext.
+const manifest: VaultManifest = {
+  version: "1", app: "ZK-Whistle", encryption: "AES-256-GCM",
+  file: { name: fileName, mimeType, size: encryptedPayload.ciphertext.length, encryptedAt: Date.now() },
+  payload: { iv: bytesToBase64(encryptedPayload.iv),
+             ciphertext: bytesToBase64(encryptedPayload.ciphertext) },
+  lit: { network: LIT_NETWORK, chain: litChain,
+         ciphertext: litKey.ciphertext, dataToEncryptHash: litKey.dataToEncryptHash,
+         accessControlConditions: acc },
+  recipient: recipientAddr,
+};
+
+// (3) Persist ciphertext to Arweave, then (4) register the switch on-chain.
+const arweaveTxId = await upload(new TextEncoder().encode(JSON.stringify(manifest)), /* meta */);
+await createSwitch(BigInt(interval), arweaveTxId, litRef, recipientAddr);
+\end{lstlisting}
+
+The ordering is the security argument made executable. Encryption precedes every
+egress, so no plaintext can leak even if a later step fails; the key is sealed
+before storage, so the manifest written to Arweave contains only ciphertext and a
+\emph{sealed} key that is useless until the switch triggers; and registration comes
+last, so a half-built vault is never advertised on-chain. The manifest is
+self-describing, which means release needs nothing but the Arweave transaction id
+recorded in the switch.
+
+Release, implemented in the \code{useVaultRelease} hook, runs the pipeline in
+reverse: fetch and parse the manifest from Arweave, authorise with the wallet and
+ask Lit to release the AES key (which only succeeds once \isdeceased is true on a
+supported chain), then AES-GCM-decrypt the payload locally and hand back the
+recovered file. Decryption, like encryption, happens entirely on the requester's
+device. It is worth being candid, as the code comments are, that this decrypt path
+follows the documented v8 \code{AuthManager} pattern but has not yet been exercised
+against a live Naga deployment; Chapter~\ref{ch:evaluation} treats this honestly as
+a limitation.
+
+\section{Deployment and Network Configuration}
+\label{sec:impl-deploy}
+
+Deployment uses hardhat-deploy scripts that run in dependency order: a mock Reclaim
+verifier (for local testing), then the registry, then the marketplace, with the
+dead man's switch independent of the others. The interesting logic lives in how
+verification is wired per network (Listing~\ref{lst:deploy-registry}). On the local
+chain the registry is deployed with \code{autoVerifyOnSubmit} enabled and pointed
+at the mock verifier, so the full flow is demonstrable offline. On live networks
+\code{autoVerifyOnSubmit} is disabled and the registry is pointed at the real,
+per-chain Reclaim verifier address (overridable by environment variable), so
+verification carries cryptographic weight.
+
+\begin{lstlisting}[language=TypeScript,caption={Per-network verification wiring (abridged) (\code{01\_deploy\_whistleblower\_registry.ts}).},label={lst:deploy-registry}]
+const isLocal = chainId === "31337";
+
+await deploy("WhistleblowerRegistry", {
+  from: deployer,
+  args: [isLocal],   // autoVerifyOnSubmit: dev-only convenience
+  log: true, autoMine: true,
+});
+
+let verifier = isLocal
+  ? (await get("MockReclaim")).address
+  : process.env.RECLAIM_VERIFIER_ADDRESS || RECLAIM_VERIFIERS[chainId];
+
+if (verifier)
+  await execute("WhistleblowerRegistry", { from: deployer }, "setReclaimVerifier", verifier);
+\end{lstlisting}
+
+After deployment, SE-2 regenerates the typed contract bindings consumed by the
+front end, so the React hooks always reflect the deployed ABIs. The same scripts
+deploy cleanly to a Lit-supported testnet such as Base Sepolia, which is the
+configuration under which the threshold-custody path can be exercised end-to-end.
+
+\section{Security Engineering Summary}
+\label{sec:impl-security}
+
+Security in \zkw is not a single feature but a set of invariants upheld at every
+layer; Table~\ref{tab:impl-security} collects the principal controls and where they
+are enforced. The throughline is least exposure: secrets are generated as late and
+destroyed as early as possible, every network surface sees only ciphertext or
+public data, and trust is distributed --- across the Lit threshold network, the
+Reclaim witnesses, and the chain --- rather than concentrated in any one component.
+
+\begin{table}[h]
+\centering
+\caption{Security controls and their enforcement points.}
+\label{tab:impl-security}
+\begin{tabular}{p{4.6cm} p{8.8cm}}
+\toprule
+\textbf{Control} & \textbf{Where and how enforced} \\
+\midrule
+In-browser encryption & AES-256-GCM via Web Crypto; plaintext never leaves the device (\code{encryption.ts}). \\
+Fresh nonce per payload & 96-bit IV drawn per encryption; no key/nonce reuse (\code{encryption.ts}). \\
+Threshold key custody & Key sealed under on-chain conditions; released only by Lit MPC quorum (\code{litProtocol.ts}). \\
+No plaintext on-chain & Contracts store only timestamps, hashes, and references (\code{*.sol}). \\
+Reentrancy safety & Checks--effects--interactions plus \code{ReentrancyGuard} on fund moves (\code{Marketplace.sol}). \\
+Honest verification badge & Verified flag read from registry, not self-asserted; on-chain proof check (\code{Marketplace.sol}, \code{WhistleblowerRegistry.sol}). \\
+Secret containment & Reclaim app secret confined to a Node-only route; provider allow-list (\code{api/reclaim}). \\
+Storage hardening & Size cap, per-IP rate limit, generic errors, \code{no-store} (\code{api/storage}). \\
+Payment unlinkability & One-time ERC-5564 stealth addresses per payout (\code{stealthAddress.ts}). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+With the system built, the next chapter turns to whether it works and how well:
+the automated test suite, the deployment exercises, an evaluation against the
+threat model and design goals, and a frank accounting of the prototype's
+limitations.
