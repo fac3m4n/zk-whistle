@@ -374,11 +374,28 @@ from the browser, which lets the project use Turbo's free tier for sub-100~KiB
 payloads --- no wallet, no funding transaction, no testnet gas --- while keeping the
 upload path under the application's control.
 
+This is the result of a deliberate design revision. An earlier iteration uploaded
+directly from the browser using the Irys web SDK, which required the source's
+connected wallet to pay for storage: the client had to query a price, check its
+balance on the Irys bundler, and submit a \emph{funding transaction} before the
+upload could proceed. For a whistleblowing tool this is doubly undesirable --- it
+demands that the source hold and spend tokens, and, worse, it leaves an on-chain
+funding trail that can become a deanonymisation vector. The system was therefore
+migrated to ArDrive's Turbo SDK, whose \code{unauthenticated} free tier stores
+payloads under 100~KiB with no wallet, no funding step, and no traceable
+transaction. The migration also relocated the upload from the client to a
+server-side route, which is what makes it possible to confine the Node-oriented
+Turbo SDK to the server and to apply the hardening described below. The net effect
+is a simpler, more robust path that also removes a privacy hazard --- a good example
+of a security property emerging from an engineering simplification rather than from
+added machinery. The module retains its original filename (\code{irysUpload.ts})
+for continuity, but its implementation now wraps Turbo end to end.
+
 The client side is deliberately thin: it POSTs raw bytes and a little metadata,
 and reads payloads back by transaction id from a public gateway
-(Listing~\ref{lst:irys-client}).
+(Listing~\ref{lst:storage-client}).
 
-\begin{lstlisting}[language=TypeScript,caption={Thin storage client (\code{irysUpload.ts}).},label={lst:irys-client}]
+\begin{lstlisting}[language=TypeScript,caption={Thin storage client (\code{irysUpload.ts}).},label={lst:storage-client}]
 export async function uploadToArweave(data: Uint8Array, metadata): Promise<string> {
   const response = await fetch("/api/storage", {
     method: "POST",
@@ -396,7 +413,7 @@ export async function uploadToArweave(data: Uint8Array, metadata): Promise<strin
 }
 \end{lstlisting}
 
-The server route is where the security controls live (Listing~\ref{lst:irys-route}).
+The server route is where the security controls live (Listing~\ref{lst:storage-route}).
 It runs only in the Node runtime --- so the Node-oriented Turbo SDK never executes
 client-side --- caps the body at 100~KiB to enforce the free tier and act as an abuse
 ceiling, applies best-effort per-IP rate limiting, attaches Arweave tags for
@@ -406,7 +423,7 @@ cached by intermediaries. Because the body is already AES-256-GCM ciphertext
 wrapped in a self-describing manifest, the route handles no plaintext and no key
 material; even a fully compromised storage server learns nothing.
 
-\begin{lstlisting}[language=TypeScript,caption={Hardened upload route (abridged) (\code{api/storage/route.ts}).},label={lst:irys-route}]
+\begin{lstlisting}[language=TypeScript,caption={Hardened upload route (abridged) (\code{api/storage/route.ts}).},label={lst:storage-route}]
 export const runtime = "nodejs";
 const MAX_BYTES = 100 * 1024;
 
