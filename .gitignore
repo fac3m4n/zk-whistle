@@ -21,3 +21,15 @@ node_modules
 
 # cli
 dist
+
+
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+
+article/
+thesis/
